@@ -10,8 +10,8 @@ const projectRoot = process.cwd();
 const iconDirectory = resolve(projectRoot, 'public', 'icons');
 
 const runtimeAssets = [
-  ['foxfetch-dark.svg', '2c69da8541fe215ee4af5e7dea8cf2091c5a05a2ecf7df62d211503b8256d570'],
-  ['foxfetch.svg', 'dbec9a74467bf7ff71fb6283acffcba323338456fa0f4a560b116a7a8f70ea03'],
+  ['foxfetch-dark.svg', '356e1d5e982044797d5e05821ff1817253ae0e87b7e9478daf86b74671d58524'],
+  ['foxfetch.svg', '5f4c3aa9c477367769d92a6821f240e5fc517841db8bf89a74fd43e2cb1530dc'],
   ['icon-128.png', '3a425cc43e2f6fe8139e5f4ab29e20bac57b7bb97548a83d29f654c267b47a06'],
   ['icon-16.png', '26ea74f72125680b1940e1f3edde015390cffd81c9df76a24a235840c02cbce2'],
   ['icon-32.png', 'c47f07248b00d56d2fcff62ef047203b54f1f057570688d756a80e51a358f018'],
@@ -22,14 +22,33 @@ function readAsset(name: string): Buffer {
   return readFileSync(resolve(iconDirectory, name));
 }
 
+function assetHash(name: string, bytes: Buffer): string {
+  // Git may check out SVG text with CRLF on Windows; binary assets stay byte-exact.
+  const content = name.endsWith('.svg') ? bytes.toString('utf8').replace(/\r\n/g, '\n') : bytes;
+  return createHash('sha256').update(content).digest('hex');
+}
+
 describe('FoxFetch 26 V2 runtime brand assets', () => {
   it('ships only the audited runtime whitelist at its recorded hashes', () => {
     expect(readdirSync(iconDirectory).sort()).toEqual(runtimeAssets.map(([name]) => name).sort());
 
     for (const [name, expectedHash] of runtimeAssets) {
-      expect(createHash('sha256').update(readAsset(name)).digest('hex')).toBe(expectedHash);
+      expect(assetHash(name, readAsset(name)), name).toBe(expectedHash);
     }
   });
+
+  it.each(['foxfetch.svg', 'foxfetch-dark.svg'])(
+    '%s has the same audited hash with LF or CRLF',
+    (name) => {
+      const lf = readAsset(name).toString('utf8').replace(/\r\n/g, '\n');
+      const expectedHash = runtimeAssets.find(([asset]) => asset === name)![1];
+      expect(assetHash(name, Buffer.from(lf))).toBe(expectedHash);
+      expect(assetHash(name, Buffer.from(lf.replace(/\n/g, '\r\n')))).toBe(expectedHash);
+      expect(
+        assetHash(name, Buffer.from(lf.replace('<svg', '<svg data-modified="true"'))),
+      ).not.toBe(expectedHash);
+    },
+  );
 
   it.each([
     ['icon-16.png', 16],
