@@ -1,0 +1,2 @@
+/** Static markup only. All task and page-owned values must be assigned with textContent. */
+export const mediaTaskDetailsMarkup = `<details class="merge-diagnostics" data-role="merge-diagnostics" hidden><summary><span data-i18n="E1135">查看详情</span></summary><pre data-role="merge-diagnostic-text"></pre><button class="control" type="button" data-action="copy-merge-diagnostics"><span data-i18n="E1796">复制诊断信息</span></button></details>`;

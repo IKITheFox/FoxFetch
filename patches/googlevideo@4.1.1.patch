@@ -1,0 +1,191 @@
+diff --git a/dist/src/core/SabrStream.d.ts b/dist/src/core/SabrStream.d.ts
+index 386ff9a47a45b409f1482690d0f07c4feb5b6166..7a3663643f56fc1e5d3c0ddd0de2504b6975a845 100644
+--- a/dist/src/core/SabrStream.d.ts
++++ b/dist/src/core/SabrStream.d.ts
+@@ -105,6 +105,12 @@ export declare class SabrStream extends EventEmitterLike {
+     once(event: 'finish', listener: () => void): void;
+     once(event: 'abort', listener: () => void): void;
+     constructor(config?: SabrStreamConfig);
++    /** FoxFetch: unfinished segments plus queued output media bytes. */
++    getBufferedByteLength(): number;
++    getQueuedByteLength(): number;
++    configureBuffering(options: { createSegmentStore(): Promise<{ write(chunk: Uint8Array): Promise<void>; drain(emit: (chunk: Uint8Array) => Promise<void>): Promise<void> }>; waitForOutput(): Promise<void> }): void;
++    /** FoxFetch: seed observed contexts before start; subsequent server policies take precedence. */
++    seedSabrContexts(contexts: Array<{ type?: number | undefined; value?: Uint8Array | undefined }>): void;
+     /**
+      * Sets Proof of Origin (PO) token.
+      * @param poToken - The base64-encoded token string.
+diff --git a/dist/src/core/SabrStream.js b/dist/src/core/SabrStream.js
+index b1ef16c3a0fc53f152df8a029cf75b13905aea31..9292b6f25692d01a83988e961cbe49e4d86240d6 100644
+--- a/dist/src/core/SabrStream.js
++++ b/dist/src/core/SabrStream.js
+@@ -70,13 +70,39 @@ export class SabrStream extends EventEmitterLike {
+             start: (controller) => {
+                 this.videoController = controller;
+             }
+-        });
++        }, { highWaterMark: 0, size: (chunk) => chunk.byteLength });
+         this.audioStream = new ReadableStream({
+             start: (controller) => {
+                 this.audioController = controller;
+             }
+-        });
++        }, { highWaterMark: 0, size: (chunk) => chunk.byteLength });
++    }
++    /** FoxFetch: seed once, then let server sending/write policies own the state. */
++    seedSabrContexts(contexts) {
++        if (this.abortController || this.requestNumber !== 0 || this.sabrContexts.size) {
++            throw new Error('SABR_CONTEXT_ALREADY_INITIALIZED');
++        }
++        for (const context of contexts) {
++            if (context.type === undefined || !context.value?.length) continue;
++            this.sabrContexts.set(context.type, { type: context.type, value: context.value.slice() });
++            this.activeSabrContextTypes.add(context.type);
++        }
+     }
++    /** FoxFetch: retained media only, not lifetime protocol traffic. */
++    getBufferedByteLength() {
++        let bytes = (this.parserBufferedBytes || 0) + Math.max(0, -(this.videoController?.desiredSize ?? 0))
++            + Math.max(0, -(this.audioController?.desiredSize ?? 0));
++        for (const segment of this.partialSegmentQueue.values()) {
++            for (const chunk of segment.bufferedChunks) bytes += chunk.byteLength;
++        }
++        return bytes;
++    }
++    /** Only completed media waiting for consumers; partial segments must keep reading. */
++    getQueuedByteLength() {
++        return Math.max(0, -(this.videoController?.desiredSize ?? 0))
++            + Math.max(0, -(this.audioController?.desiredSize ?? 0));
++    }
++    configureBuffering(options) { this.buffering = options; }
+     /**
+      * Sets Proof of Origin (PO) token.
+      * @param poToken - The base64-encoded token string.
+@@ -592,15 +618,22 @@ export class SabrStream extends EventEmitterLike {
+             else {
+                 chunk = new CompositeBuffer([value]);
+             }
++            this.parserBufferedBytes = chunk.totalLength;
++            if (this.getBufferedByteLength() > 64 * 1024 * 1024) throw new Error('SABR_BUFFER_LIMIT');
+             const ump = new UmpReader(chunk);
+-            partialPart = ump.read((part) => {
+-                processedParts.push(part.type);
++            const parts = [];
++            partialPart = ump.read((part) => parts.push(part));
++            for (const part of parts) {
++                if (!processedParts.includes(part.type)) processedParts.push(part.type);
+                 const handler = this.umpPartHandlers.get(part.type);
+                 if (handler) {
+-                    handler(part);
++                    await handler(part);
+                 }
+-            });
++            }
++            this.parserBufferedBytes = partialPart?.data.totalLength || 0;
+         }
++        if (partialPart?.data.totalLength) throw new Error('SEGMENT_MISSING');
++        this.parserBufferedBytes = 0;
+         return processedParts;
+     }
+     /**
+@@ -810,6 +843,10 @@ export class SabrStream extends EventEmitterLike {
+         if (!mediaHeader)
+             return;
+         const headerId = mediaHeader.headerId || 0;
++        if (this.partialSegmentQueue.has(headerId) || this.partialSegmentQueue.size >= 64)
++            throw new Error('SABR_BUFFER_LIMIT');
++        const declaredLength = Number(mediaHeader.contentLength);
++        if (!Number.isSafeInteger(declaredLength) || declaredLength <= 0) throw new Error('SEGMENT_MISSING');
+         const formatIdKey = FormatKeyUtils.fromMediaHeader(mediaHeader);
+         const segmentNumber = mediaHeader.isInitSeg ? 0 : mediaHeader.sequenceNumber || 0;
+         const durationMs = mediaHeader.durationMs || Math.ceil((parseInt(mediaHeader.timeRange?.durationTicks || '0') / (mediaHeader.timeRange?.timescale || 0)) * 1000).toString();
+@@ -837,7 +874,7 @@ export class SabrStream extends EventEmitterLike {
+      * Buffers media data chunks associated with a specific header ID.
+      * @private
+      */
+-    handleMedia(part) {
++    async handleMedia(part) {
+         const headerId = part.data.getUint8(0);
+         const segment = this.partialSegmentQueue.get(headerId);
+         if (!segment) {
+@@ -851,7 +888,14 @@ export class SabrStream extends EventEmitterLike {
+         }
+         const dataBuffer = part.data.split(1).remainingBuffer;
+         for (const chunk of dataBuffer.chunks) {
+-            segment.bufferedChunks.push(chunk);
++            segment.receivedBytes = (segment.receivedBytes || 0) + chunk.byteLength;
++            if (segment.receivedBytes > Number(segment.mediaHeader.contentLength)) throw new Error('SEGMENT_MISSING');
++            if (this.buffering) {
++                segment.store ??= await this.buffering.createSegmentStore();
++                await segment.store.write(chunk);
++            } else {
++                segment.bufferedChunks.push(chunk);
++            }
+         }
+     }
+     /**
+@@ -859,22 +903,32 @@ export class SabrStream extends EventEmitterLike {
+      * Finalizes a segment, enqueues its data to the appropriate stream, and updates tracking.
+      * @private
+      */
+-    handleMediaEnd(part) {
++    async handleMediaEnd(part) {
+         const headerId = part.data.getUint8(0);
+         const segment = this.partialSegmentQueue.get(headerId);
+         if (!segment) {
+             this.logger.debug(TAG, `Received MediaEnd for an unknown Header ID: ${headerId}`);
+             return;
+         }
+-        const loadedBytes = segment.bufferedChunks.reduce((sum, chunk) => sum + chunk.length, 0);
++        const loadedBytes = segment.receivedBytes ?? segment.bufferedChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+         if (loadedBytes !== parseInt(segment.mediaHeader.contentLength || '0')) {
+             this.logger.warn(TAG, `Content length mismatch for segment ${segment.segmentNumber} (Header ID: ${headerId}, key: ${segment.formatIdKey}, expected: ${segment.mediaHeader.contentLength}, received: ${loadedBytes})`);
+-            this.partialSegmentQueue.delete(headerId);
+-            return;
++            throw new Error('SEGMENT_MISSING');
+         }
+         const initializedFormat = this.initializedFormatsMap.get(segment.formatIdKey);
+         if (initializedFormat) {
+             const mediaType = getMediaType(initializedFormat);
++            // Publish the validated byte range before any async output can be consumed.
++            // Completion still requires the destination writer to pass the entire range.
++            initializedFormat.downloadedSegments.set(segment.segmentNumber, segment);
++            if (segment.store) {
++                const output = mediaType === 'audio' ? this.audioController : this.videoController;
++                await segment.store.drain(async (chunk) => {
++                    await this.buffering.waitForOutput();
++                    output?.enqueue(chunk);
++                });
++                segment.store = undefined;
++            }
+             if (segment.bufferedChunks.length) {
+                 for (const chunk of segment.bufferedChunks) {
+                     if (mediaType === 'audio') {
+@@ -889,7 +943,6 @@ export class SabrStream extends EventEmitterLike {
+             segment.bufferedChunks.length = 0; // Avoid weird mem leaks...
+             segment.bufferedChunks = [];
+             initializedFormat.lastMediaHeaders.push(segment.mediaHeader);
+-            initializedFormat.downloadedSegments.set(segment.segmentNumber, segment);
+             this.partialSegmentQueue.delete(headerId);
+         }
+     }
+diff --git a/dist/src/core/UmpReader.js b/dist/src/core/UmpReader.js
+index 27ec572f1b7ed94cf794d4787afc05160f098cf5..e315ababac904bff8b369da9dd0b7f93f2f82131 100644
+--- a/dist/src/core/UmpReader.js
++++ b/dist/src/core/UmpReader.js
+@@ -17,6 +17,7 @@ export class UmpReader {
+             offset = newOffset;
+             const [partSize, finalOffset] = this.readVarInt(offset);
+             offset = finalOffset;
++            if (partSize > 64 * 1024 * 1024) throw new Error('SABR_PART_TOO_LARGE');
+             if (partType < 0 || partSize < 0)
+                 break;
+             if (!this.compositeBuffer.canReadBytes(offset, partSize)) {
+@@ -37,6 +38,7 @@ export class UmpReader {
+             });
+             this.compositeBuffer = splitResult.remainingBuffer;
+         }
++        if (this.compositeBuffer.totalLength) return { type: -1, size: -1, data: this.compositeBuffer };
+     }
+     /**
+      * Reads a variable-length integer from the buffer.

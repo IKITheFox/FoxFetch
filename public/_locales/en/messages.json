@@ -1,0 +1,10 @@
+{
+  "extensionName": { "message": "FoxFetch" },
+  "extensionDescription": {
+    "message": "Discover, control, and download web media you have permission to access."
+  },
+  "commandIncreaseRate": { "message": "Increase playback speed" },
+  "commandDecreaseRate": { "message": "Decrease media playback speed" },
+  "commandResetRate": { "message": "Reset playback speed" },
+  "commandToggleController": { "message": "Show or hide the media controller" }
+}

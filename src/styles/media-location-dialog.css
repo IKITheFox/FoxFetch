@@ -1,0 +1,190 @@
+.merge-path-layer {
+  box-sizing: border-box;
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  overflow: visible;
+  background: color-mix(in srgb, #000 48%, transparent);
+  backdrop-filter: blur(6px);
+  border-radius: inherit;
+}
+.merge-path-layer[hidden] {
+  display: none;
+}
+.youtube-location-dialog {
+  position: fixed;
+}
+.merge-path-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: default;
+}
+.merge-path-dialog {
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(340px, 100%);
+  min-height: 0;
+  gap: 9px;
+  padding: 14px;
+  overflow: visible;
+  color: var(--text);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.merge-path-dialog-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.merge-path-dialog-head strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.merge-path-choice {
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: 32px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 9px;
+  padding: 9px;
+  color: var(--muted);
+  text-align: left;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+.merge-path-dialog > [hidden],
+.merge-path-dialog > p:empty {
+  display: none !important;
+}
+@media (max-height: 420px) {
+  .merge-path-layer {
+    padding: 6px;
+  }
+  .merge-path-dialog {
+    padding: 8px;
+    gap: 5px;
+  }
+  .merge-path-choice {
+    padding: 6px;
+    gap: 6px;
+  }
+}
+.merge-path-choice:not(:disabled):hover,
+.merge-path-choice:focus-visible,
+.merge-path-choice[aria-pressed='true'] {
+  color: var(--text);
+  background: var(--surface-hover);
+  border-color: color-mix(in srgb, var(--primary) 46%, var(--border));
+}
+.merge-path-choice:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.merge-path-choice-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border-radius: 9px;
+}
+.merge-path-choice-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.merge-path-choice-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.merge-path-choice-copy strong,
+.merge-path-choice-copy small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.merge-path-choice-copy strong {
+  color: var(--text);
+  font-size: 11px;
+}
+.merge-path-choice-copy small {
+  color: var(--tertiary);
+  font-size: 9px;
+}
+.merge-path-choice-check {
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0;
+}
+.merge-path-choice[aria-pressed='true'] .merge-path-choice-check {
+  opacity: 1;
+}
+.merge-path-picker-error {
+  margin: 0;
+  padding: 7px 8px;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--border));
+  border-radius: 8px;
+  font-size: 10px;
+}
+.merge-path-picker-error[hidden] {
+  display: none;
+}
+.merge-path-choice[data-step-hidden] {
+  display: none !important;
+}
+.merge-path-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+}
+.merge-path-steps[hidden] {
+  display: none;
+}
+.merge-path-steps button {
+  font: inherit;
+  color: var(--primary);
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+}
+.merge-path-layer[data-compact] {
+  padding: 6px;
+}
+.merge-path-layer[data-compact] .merge-path-dialog {
+  padding: 8px;
+  gap: 6px;
+}
+.merge-path-layer[data-compact] .merge-path-choice {
+  padding: 6px;
+}
+.merge-path-layer[data-compact] .merge-path-choice small {
+  display: none;
+}

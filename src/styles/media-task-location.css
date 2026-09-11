@@ -1,0 +1,75 @@
+.merge-path {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 58px;
+  margin-top: 13px;
+  padding: 9px 10px;
+  color: var(--muted);
+  text-align: left;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+.merge-path:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+.merge-path-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border-radius: 8px;
+}
+.merge-path-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.merge-path-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.merge-path-copy span {
+  color: var(--tertiary);
+  font-size: 9px;
+}
+.merge-path strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.merge-path em {
+  color: var(--primary);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 760;
+}
+.media-task-location-editor {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface-subtle);
+}
+.media-task-location-editor[hidden] {
+  display: none;
+}
+.media-task-location-editor label {
+  display: grid;
+  gap: 6px;
+}
+.media-task-location-editor select {
+  width: 100%;
+  min-width: 0;
+}
+.media-task-location-editor p {
+  margin: 8px 0;
+  color: var(--muted);
+}

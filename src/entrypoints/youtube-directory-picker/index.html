@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN" data-ui-theme-pending style="visibility: hidden; background: transparent">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="E0527">FoxFetch · YouTube 保存目录</title>
+    <link rel="stylesheet" href="../directory-picker/style.css" />
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <main class="dialog" role="dialog" aria-modal="true" aria-labelledby="title">
+      <header>
+        <strong>FoxFetch</strong
+        ><button class="icon-button" id="close" type="button" aria-label="关闭" data-i18n-aria-label="E0100">×</button>
+      </header>
+      <h1 id="title" data-i18n="E1819">选择保存目录</h1>
+      <p class="privacy" data-i18n="E1820">仅为本次 YouTube 下载选择目录，不更改哔哩哔哩的保存位置。</p>
+      <section class="locations" aria-label="目录选择" data-i18n-aria-label="E0528">
+        <button class="location primary" id="choose" type="button" disabled>
+          <span class="location-icon" aria-hidden="true">⌁</span>
+          <span><strong data-i18n="E1735">选择目录</strong><small data-i18n="E1821">选择完成后返回视频页面开始下载</small></span>
+        </button>
+      </section>
+      <p class="status" id="status" aria-live="polite" data-i18n="E1822">正在确认目录选择请求…</p>
+    </main>
+  </body>
+</html>

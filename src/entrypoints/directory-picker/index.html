@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN" data-ui-theme-pending style="visibility: hidden; background: transparent">
+  <head>
+    <style>
+      html[data-ui-theme-pending] {
+        visibility: hidden;
+        background: transparent !important;
+      }
+      html[data-ui-theme-pending] body {
+        background: transparent !important;
+      }
+    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="E0323">FoxFetch · 保存位置</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <main
+      class="dialog"
+      data-static-ui
+      contenteditable="false"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="title"
+    >
+      <header>
+        <div class="brand" aria-label="FoxFetch">
+          <span class="brand-mark" aria-hidden="true">
+            <img class="brand-light" src="/icons/foxfetch.svg" alt="" draggable="false" />
+            <img class="brand-dark" src="/icons/foxfetch-dark.svg" alt="" draggable="false" />
+          </span>
+          <span aria-hidden="true"
+            ><span class="brand-fox">Fox</span><span class="brand-fetch">Fetch</span></span
+          >
+        </div>
+        <button class="icon-button" id="close" type="button" aria-label="关闭" data-i18n-aria-label="E0100">×</button>
+      </header>
+      <h1 id="title" data-i18n="E1249">选择保存位置</h1>
+      <p class="privacy" data-i18n="E1816">只保存目录授权，不读取无关文件</p>
+      <section class="locations" aria-label="保存位置选项" data-i18n-aria-label="E0324">
+        <button class="location" id="use-default" type="button">
+          <span class="location-icon" aria-hidden="true">↓</span>
+          <span><strong data-i18n="E1790">默认位置</strong><small id="default-path"></small></span>
+        </button>
+        <button class="location primary" id="choose" type="button">
+          <span class="location-icon" aria-hidden="true">⌁</span>
+          <span
+            ><strong data-i18n="E1817">选择自定义目录</strong
+            ><small id="custom-path" data-i18n="E1818">选择后将为当前平台记住</small></span
+          >
+        </button>
+      </section>
+      <p class="status" id="status" aria-live="polite"></p>
+    </main>
+  </body>
+</html>

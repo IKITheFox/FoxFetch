@@ -1,0 +1,58 @@
+{
+  "name": "foxfetch",
+  "version": "1.0.0",
+  "description": "FoxFetch - 网页媒体下载与播放控制浏览器扩展",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "pnpm": ">=11.19.0 <12"
+  },
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "prepare": "wxt prepare",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "@mediabunny/mp3-encoder": "1.55.4",
+    "googlevideo": "4.1.1",
+    "idb": "8.0.3",
+    "mediabunny": "1.55.4",
+    "mp4box": "2.4.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.62.1",
+    "@types/chrome": "0.2.7",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@vitejs/plugin-react": "6.1.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "@wxt-dev/module-react": "1.2.2",
+    "eslint": "10.9.1",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "fake-indexeddb": "6.2.5",
+    "jsdom": "30.0.1",
+    "prettier": "3.9.6",
+    "sharp": "0.35.4",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.68.0",
+    "vite": "8.2.2",
+    "vitest": "4.1.11",
+    "wxt": "0.21.4"
+  }
+}

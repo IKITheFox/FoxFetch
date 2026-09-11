@@ -1,0 +1,220 @@
+.settings-page {
+  position: relative;
+  min-height: 100vh;
+  color: var(--text);
+  background: var(--canvas);
+  padding-bottom: 110px;
+}
+.settings-copyright {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+  margin: 20px 0 8px;
+}
+.settings-embedded {
+  height: 100dvh;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.settings-embedded .settings-top {
+  flex: 0 0 auto;
+  padding: 14px 16px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.settings-embedded .settings-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+}
+.settings-embedded .settings-save {
+  position: static;
+  flex: 0 0 auto;
+  padding: 12px 16px;
+}
+.settings-confirm-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: #0008;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.settings-confirm {
+  background: var(--surface-elevated);
+  color: var(--text);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  max-width: 100%;
+}
+.settings-confirm h2 {
+  margin: 0 0 24px;
+  font-size: 20px;
+}
+.settings-confirm-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.settings-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px max(24px, calc((100vw - 880px) / 2));
+  border-bottom: 1px solid var(--border);
+}
+.settings-content {
+  border: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.settings-top .brand__spark {
+  display: none;
+}
+.settings-content section {
+  margin-bottom: 26px;
+}
+.settings-content h2 {
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+.settings-panel {
+  border-radius: 20px;
+  padding: 8px 24px;
+  background: var(--surface-elevated);
+}
+.settings-panel .setting-row,
+.settings-panel .toggle-row {
+  min-height: 68px;
+  margin: 0;
+  padding: 16px 0;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-panel .setting-row > :first-child {
+  font-weight: 650;
+}
+.settings-panel .setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.settings-panel small {
+  display: block;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+.settings-panel summary {
+  cursor: pointer;
+  padding: 18px 0;
+  font-weight: 650;
+  color: var(--text-secondary);
+}
+.settings-panel details {
+  margin: 0;
+}
+.settings-segments {
+  display: flex;
+  background: var(--canvas);
+  border-radius: 14px;
+  padding: 5px;
+}
+.settings-segments button {
+  border: 0;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 10px;
+  font: inherit;
+  cursor: pointer;
+}
+.settings-segments button[aria-pressed='true'] {
+  background: var(--surface-elevated);
+  color: var(--text);
+  font-weight: 700;
+}
+.settings-field {
+  max-width: 320px;
+  min-width: 0;
+}
+.settings-field input {
+  max-width: 100%;
+}
+.settings-field [aria-invalid='true'] {
+  outline: 2px solid #e96d75;
+}
+.settings-note {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  margin: 14px 0;
+}
+.settings-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-tertiary);
+}
+.settings-save {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px max(24px, calc((100vw - 832px) / 2));
+  background: var(--canvas);
+  border-top: 1px solid var(--border);
+  z-index: 20;
+}
+.settings-save > span {
+  margin-right: auto;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.settings-page :focus-visible {
+  outline: 2px solid #8977ff;
+  outline-offset: 3px;
+}
+@media (max-width: 580px) {
+  .settings-content {
+    padding: 16px;
+  }
+  .settings-panel {
+    padding: 6px 16px;
+  }
+  .settings-panel .setting-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .settings-field {
+    max-width: 100%;
+  }
+  .settings-save {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+  .settings-save > span {
+    width: 100%;
+  }
+  .settings-segments button {
+    padding: 10px;
+  }
+}

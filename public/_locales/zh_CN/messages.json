@@ -1,0 +1,8 @@
+{
+  "extensionName": { "message": "FoxFetch" },
+  "extensionDescription": { "message": "发现、控制并下载当前网页中可访问的图片、视频和音频内容。" },
+  "commandIncreaseRate": { "message": "提高媒体播放速度" },
+  "commandDecreaseRate": { "message": "降低媒体播放速度" },
+  "commandResetRate": { "message": "恢复默认播放速度" },
+  "commandToggleController": { "message": "显示或隐藏媒体控制器" }
+}

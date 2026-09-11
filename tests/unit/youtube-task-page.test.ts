@@ -1,0 +1,62 @@
+import { expect, it, vi } from 'vitest';
+import { mountYouTubeTaskPage } from '../../src/modules/youtube/task-page';
+
+it('opens and returns without rebuilding controls, remembers same video and resets on navigation', () => {
+  const host = document.createElement('div');
+  const card = document.createElement('article');
+  const actions = document.createElement('div');
+  const group = document.createElement('fieldset');
+  const progress = document.createElement('progress');
+  group.append(progress);
+  card.append(actions);
+  host.append(card, group);
+  document.body.append(host);
+  let dispose = mountYouTubeTaskPage(host, 'video1', card, group, actions);
+  expect(group.getAttribute('aria-hidden')).toBe('true');
+  actions.querySelector('button')!.click();
+  expect(card.style.display).toBe('none');
+  expect(group.getAttribute('aria-hidden')).toBe('false');
+  expect(document.activeElement).toBe(group.querySelector('button'));
+  group.querySelector('button')!.click();
+  expect(document.activeElement).toBe(actions.querySelector('button'));
+  expect(group.querySelector('progress')).toBe(progress);
+  actions.querySelector('button')!.click();
+  dispose();
+  dispose = mountYouTubeTaskPage(host, 'video1', card, group, actions);
+  expect(group.getAttribute('aria-hidden')).toBe('false');
+  expect(actions.querySelectorAll('button')).toHaveLength(1);
+  dispose();
+  dispose = mountYouTubeTaskPage(host, 'video2', card, group, actions);
+  expect(group.getAttribute('aria-hidden')).toBe('true');
+  expect(card.style.display).toBe('');
+  dispose();
+  host.remove();
+});
+it('uses the existing toolbar back button without triggering the Bilibili delegate and restores ownership', () => {
+  const host = document.createElement('div');
+  const card = document.createElement('article');
+  const group = document.createElement('fieldset');
+  const actions = document.createElement('div');
+  const back = document.createElement('button');
+  back.style.display = 'none';
+  host.append(back, card, group, actions);
+  document.body.append(host);
+  const delegate = vi.fn();
+  host.addEventListener('click', delegate);
+  const dispose = mountYouTubeTaskPage(host, 'external', card, group, actions, {
+    backButton: back,
+  });
+  actions.querySelector('button')!.click();
+  delegate.mockClear();
+  expect(back.style.display).toBe('grid');
+  expect(document.activeElement).toBe(back);
+  back.click();
+  expect(delegate).not.toHaveBeenCalled();
+  expect(host.dataset.youtubeTaskOpen).toBe('false');
+  dispose();
+  expect(back.isConnected).toBe(true);
+  expect(back.style.display).toBe('none');
+  back.click();
+  expect(delegate).toHaveBeenCalledOnce();
+  host.remove();
+});

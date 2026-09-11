@@ -1,0 +1,147 @@
+@import './tokens.css';
+@import './scrollbars.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select {
+  color: inherit;
+  font: inherit;
+}
+button {
+  border: 0;
+  user-select: text;
+}
+button,
+label,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled),
+select:not(:disabled),
+input[type='checkbox']:not(:disabled),
+input[type='range']:not(:disabled) {
+  cursor: pointer;
+}
+button:disabled,
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+img {
+  display: block;
+  max-width: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Limit editing-caret styling to owned UI, including portalled listboxes.
+   Browser F7 navigation carets are outside this CSS guarantee. */
+.app-shell,
+.custom-select__listbox--portal {
+  cursor: default;
+  caret-color: transparent;
+  user-select: text;
+}
+input:is(
+    :not([type]),
+    [type='text'],
+    [type='search'],
+    [type='password'],
+    [type='email'],
+    [type='url'],
+    [type='tel'],
+    [type='number'],
+    [type='date'],
+    [type='datetime-local'],
+    [type='time'],
+    [type='month'],
+    [type='week']
+  ):not([readonly]):not(:disabled),
+textarea:not([readonly]):not(:disabled),
+[contenteditable='true'] {
+  cursor: text;
+  caret-color: auto;
+  user-select: text;
+}
+input[readonly],
+textarea[readonly] {
+  cursor: default;
+  caret-color: transparent;
+}
+summary,
+[role='tab'],
+[role='switch'] {
+  user-select: text;
+}
+svg {
+  user-select: none;
+}
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 34%, transparent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>FoxFetch Media Fixture</title>
+    <style>
+      .background-media {
+        width: 320px;
+        height: 180px;
+        background-image: url('https://media.example.test/background.webp');
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FoxFetch Media Fixture</h1>
+    <img
+      alt="fixture"
+      src="https://media.example.test/cover.jpg"
+      srcset="
+        https://media.example.test/cover-640.jpg   640w,
+        https://media.example.test/cover-1280.jpg 1280w
+      "
+    />
+    <picture>
+      <source srcset="https://media.example.test/hero.avif" type="image/avif" />
+      <img alt="hero" src="https://media.example.test/hero.png" />
+    </picture>
+    <video
+      controls
+      poster="https://media.example.test/poster.webp"
+      src="https://media.example.test/movie.mp4"
+    ></video>
+    <audio controls src="https://media.example.test/voice.mp3"></audio>
+    <a href="https://media.example.test/master.m3u8">HLS</a>
+    <a href="https://media.example.test/manifest.mpd">DASH</a>
+    <div class="background-media"></div>
+    <script>
+      setTimeout(() => {
+        const image = document.createElement('img');
+        image.alt = 'dynamic';
+        image.src = 'https://media.example.test/dynamic.png';
+        document.body.append(image);
+      }, 300);
+    </script>
+  </body>
+</html>
