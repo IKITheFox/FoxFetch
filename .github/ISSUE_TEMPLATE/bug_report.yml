@@ -1,0 +1,42 @@
+name: Bug report / 缺陷反馈
+description: Report a reproducible defect / 反馈可复现的问题
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not post cookies, tokens, signed URLs, private media, or security vulnerabilities here.
+        请勿提交 Cookie、令牌、带签名链接、私人媒体或安全漏洞细节。
+        Security / 安全报告: https://github.com/IKITheFox/FoxFetch/security/advisories/new
+  - type: input
+    id: version
+    attributes:
+      label: Extension version / 扩展版本
+      placeholder: v1.0.0 Beta
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS / 浏览器与操作系统
+      placeholder: Chrome version, Windows / macOS / Linux
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      description: Include the affected site; share a public URL only if safe. / 说明网站，仅在安全时提供公开链接。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior / 预期与实际表现
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Error code, format, and screenshots / 错误码、格式与截图
+      description: For downloads, include resolution, codec, and container. Sanitize diagnostics. / 下载问题请提供分辨率、编码与封装，诊断需脱敏。

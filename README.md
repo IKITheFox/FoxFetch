@@ -1,84 +1,101 @@
+<p align="center"><img src="public/icons/foxfetch.svg" width="88" alt="FoxFetch"></p>
+
 # FoxFetch
 
-**在一个扩展中发现网页媒体、控制播放并保存文件。**
+Web media discovery, playback controls, and downloads for Chrome.
 
-简体中文 | [English](README.en.md)
+English | [简体中文](README.zh-CN.md)
 
-FoxFetch 是面向 Chrome 的 Manifest V3 扩展。它将页面资源列表、浮动播放控制器和下载任务整合在一起，让你在浏览网页时查看可用的视频、音频和图片，并保存你拥有或获得下载授权的内容。
+[Download v1.0.0 Beta](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.0-Beta) · [Report an issue](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [Changelog](CHANGELOG.md)
 
-**当前版本：v1.0.0 Beta · 测试版 · GitHub 完整版**
+FoxFetch is a Manifest V3 extension that combines a media resource sidebar with a floating playback controller. It detects video, audio, and image resources on supported pages and saves content you own or have permission to download.
 
-## 功能
+**Status:** v1.0.0 Beta. This release is distributed through GitHub and requires manual installation. It is not a Chrome Web Store listing.
 
-- **资源中心**：在侧边栏查看当前页面资源，按类型筛选、搜索并查看缩略图。
-- **浮动控制器**：播放／暂停、调节速度、恢复默认速度、静音／解除静音；支持的网站可切换上一／下一视频。
-- **站点适配**：提供 Bilibili 和 YouTube 的专用媒体识别与下载流程。实际可用资源取决于页面、账号权限和服务端响应。
-- **下载偏好**：YouTube 提供分辨率与“兼容、画质、体积”偏好；遇到适用的格式错误时有限尝试其他组合，不静默降低所选分辨率。
-- **本地处理**：在浏览器中读取媒体、使用私有临时文件处理大分片并合并受支持的音视频组合，不需要额外安装桌面下载助手。
-- **清楚的任务状态**：显示下载、处理、保存和失败状态；可复制诊断信息协助排查。
-- **一致的界面**：中英文切换、浅色／深色／跟随系统主题；设置以浮窗显示，关闭前提醒保存未保存的更改。
+## Features
 
-## 安装
+- **Resource center:** browse media found on the current page, search by name, and filter by resource type.
+- **Playback controller:** play and pause, adjust playback speed, reset speed, and mute or unmute. Previous/next navigation is available on supported sites.
+- **Bilibili and YouTube downloads:** dedicated media detection and download handling, subject to source availability and account permissions.
+- **YouTube download preferences:** select a resolution and prioritize Compatibility, Quality, or Size. Eligible failures trigger bounded attempts with alternative formats without silently reducing the selected resolution.
+- **Local media processing:** merge supported audio/video combinations in the browser. Large responses use temporary storage; no separate desktop download application is required.
+- **Download diagnostics:** view task stages, transfer information, save results, and error codes.
+- **Interface settings:** English and Simplified Chinese, light/dark/system themes, and draggable settings with an unsaved-changes prompt.
 
-当前说明适用于 GitHub 完整版，不是 Chrome 商店安装流程。
+## Installation
 
-1. 在本仓库的 **Releases** 页面下载 `FoxFetch-v1.0.0-Beta-chrome.zip`，不要下载 GitHub 自动生成的 “Source code” 包用于安装。
-2. 解压到一个固定目录，不要安装后删除该目录。
-3. 打开 `chrome://extensions/`，启用右上角的“开发者模式”。
-4. 点击“加载已解压的扩展程序”，选择包含 `manifest.json` 的目录。
-5. 固定 FoxFetch 工具栏图标，刷新需要使用扩展的视频页面。
+Requires **Chrome 120 or later**. Use an up-to-date Chrome release. Other Chromium browsers may not support every extension API used by FoxFetch.
 
-最低声明版本为 Chrome 120；建议使用当前稳定版 Chrome。其他 Chromium 浏览器的兼容性取决于其扩展接口支持，不保证与 Chrome 完全相同。
+1. Open the [v1.0.0 Beta release](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.0-Beta) and download **`FoxFetch-v1.0.0-Beta-chrome.zip`**.
+2. Extract the ZIP into a permanent folder. Do not delete or move it after installation.
+3. Open `chrome://extensions/` and enable **Developer mode**.
+4. Choose **Load unpacked** and select the folder containing `manifest.json`.
+5. Pin FoxFetch to the toolbar and refresh the media page.
 
-### 更新
+The project-source and third-party-source archives are for developers, not installation. GitHub's automatic **Source code** downloads are also not ready-to-load extensions.
 
-关闭或完成正在运行的下载任务，备份旧版目录，再替换为新版文件并重新加载扩展，随后刷新视频页面。不要同时启用两份 FoxFetch。手动安装的版本不会因为 GitHub 发布新版本而自动更新。
+### Updating
 
-## 使用
+Finish or cancel active downloads. Back up the installed folder, replace its contents with the new package, and select **Reload** on Chrome's extensions page. Refresh media pages afterward. Keep only one copy enabled.
 
-1. 打开含媒体资源的网页，点击 FoxFetch。
-2. 进入“资源中心”查看资源，或打开“控制器”控制当前播放器。
-3. 在支持的下载界面选择分辨率与偏好，确认保存位置后开始下载。
-4. 等待最终“保存成功”。下载百分比或已读取字节数不等于文件已经保存成功。
+Unpacked installations do not update automatically when a new GitHub release is published.
 
-仅在需要时授予相关网站访问权限。Chrome 原生侧边栏宽度由浏览器管理，可手动拖动边界调整。
+## Usage
 
-## 使用边界
+1. Open a media page and select FoxFetch from the toolbar.
+2. Browse **Resource center** or open **Controller** to operate the current player.
+3. Choose the available download options and save location, then start the download.
+4. Wait for confirmation that the file was saved. Download progress alone does not confirm a successful save.
 
-- 只下载你拥有或已获授权下载的内容；遵守适用规则、平台条款和内容许可。
-- 不绕过 DRM、付费访问限制或网站会话验证。登录可播放不必然意味着扩展能够下载。
-- 不是所有网站、直播、编码和容器组合都可用；上一／下一视频导航也依赖网站支持。
-- “画质”和“体积”是根据可用元数据进行的选择偏好，不是跨编码器质量或最终大小保证。
-- 高码率下载使用分块处理，但仍受磁盘空间、浏览器能力及服务端限制；不承诺任意 8K／16K 视频均可下载或播放。
-- YouTube 可能返回会话验证要求。出现此类错误时不会自动绕过验证，也不会把不完整文件标为成功。
+Grant site access when the requested feature needs it. Drag Chrome's side-panel boundary to adjust its width.
 
-## 数据与权限
+## Supported use and limitations
 
-媒体处理在本机进行；正常下载仍会向原站点或媒体服务器发起网络请求。扩展使用网站访问权限识别媒体，使用下载权限保存文件，并使用浏览器存储保存设置与任务状态。同步设置可能由浏览器通过其账户同步服务同步。
+- Download only content you own or are authorized to download, in accordance with applicable laws, platform terms, and content licenses.
+- FoxFetch does not bypass DRM, paid-access restrictions, or server-side session verification. Playback access does not guarantee download availability.
+- Support varies by website, media format, and browser. Not all live streams or codec/container combinations are supported.
+- Quality and Size preferences rank the metadata supplied by the source; they do not guarantee a particular visual quality or file size.
+- High-bitrate downloads remain subject to available disk space, browser resources, and server limits. Resolution alone does not determine whether a download will succeed.
+- If YouTube requires session verification, the task stops with an error rather than treating an incomplete file as a successful download.
 
-诊断及反馈可能包含视频标题、来源信息和任务状态。提交前请检查并移除不希望公开的内容；不要公开 Cookie、访问令牌或带签名的下载链接。
+## Privacy and permissions
 
-## 反馈问题
+Media processing takes place on your device. Detection and downloads still communicate with the source website or its media servers.
 
-请在本仓库提交 Issue，并提供：扩展版本、浏览器版本、操作步骤、错误码，以及可公开的截图。涉及私人视频时，不要公开媒体内容或账号信息。
+FoxFetch uses site access to detect media, download permissions to save files, and browser storage for settings and task state. Browser account synchronization may sync supported settings. For details, see [Privacy and permissions](docs/PRIVACY.md).
 
-## 从源码构建
+Diagnostics can contain media titles, source information, and task details. Remove private information before sharing them. Never post cookies, access tokens, signed media URLs, or private videos in public issues.
 
-适用于取得项目源码的开发者；安装用户不需要执行。
+## Development
+
+Use **Node.js 24.15 or later within the 24.x series** and **pnpm 11.19 or later within the 11.x series**, as specified in `package.json`.
 
 ```sh
+git clone https://github.com/IKITheFox/FoxFetch.git
+cd FoxFetch
 pnpm install --frozen-lockfile
 pnpm typecheck
 pnpm test
 pnpm build
 ```
 
-使用项目声明的 Node.js 24 与 pnpm 11 工具链；构建输出位于 `.output/chrome-mv3`。不要直接修改安装后的依赖，项目补丁位于 `patches/`。
+Load `.output/chrome-mv3` as an unpacked extension. Use `pnpm dev` for development. Dependency patches are tracked in `patches/` and applied during installation.
 
-## 版权与第三方组件
+CI runs type checks, unit tests, and a production build. These checks do not replace testing downloads and playback on real media pages.
+
+## Contributing and support
+
+- Read the [contribution guide](CONTRIBUTING.md) before opening a pull request.
+- Use the [issue templates](https://github.com/IKITheFox/FoxFetch/issues/new/choose) for defects and feature requests.
+- Report vulnerabilities privately through the channel in [SECURITY.md](SECURITY.md).
+- See [CHANGELOG.md](CHANGELOG.md) for release history.
+
+## License
 
 Copyright © IKITheFox
 
-本项目未另行指定 FoxFetch 自有代码的开源许可证，请勿将公开分发理解为自动授予任意再许可权。第三方组件继续遵守各自许可证，见 [第三方说明](THIRD_PARTY_NOTICES.md)。随安装包提供的第三方许可文件应保留。
+FoxFetch's own code is licensed under **GNU GPL version 3 only (`GPL-3.0-only`)**. See [LICENSE](LICENSE) and [licensing scope](COPYRIGHT.md).
 
-FoxFetch 与上述媒体网站及浏览器厂商无隶属或背书关系。
+Third-party components retain their own copyright and license notices. See [Third-party notices](THIRD_PARTY_NOTICES.md) and [source and rebuild instructions](THIRD_PARTY_SOURCES.md). The original Beta tag and release archives remain unchanged; the later licensing grant is documented in [COPYRIGHT.md](COPYRIGHT.md).
+
+FoxFetch is not affiliated with or endorsed by Google, YouTube, Bilibili, or other referenced platform providers.

@@ -50,3 +50,20 @@ THE SOFTWARE.
 The release provides `FoxFetch-v1.0.0-Beta-third-party-sources.zip` alongside the Chrome installation ZIP at https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.0-Beta . It includes the complete Mediabunny v1.55.4 upstream tree (core and MP3 encoder, MPL-2.0), the LAME 3.100 source distribution, and protobuf-es v2.14.1. See [third-party source and rebuild instructions](THIRD_PARTY_SOURCES.md). Covered third-party source retains its original licenses; FoxFetch copyright statements do not restrict those rights.
 
 `@bufbuild/protobuf` 2.14.1 is licensed under Apache-2.0 AND BSD-3-Clause. Both texts are included in `third-party-licenses/`. LAME 3.100 source headers specify GNU Library GPL version 2 or later; its original COPYING is included as `LAME-LGPL-2.0-LICENSE`. FoxFetch uses the upstream MP3 encoder binary and has not modified LAME or the Mediabunny packages. The source archive and rebuild instructions support replacing those components. No restriction on reverse engineering for debugging modifications to LGPL-covered components is intended.
+
+## FoxFetch GPL-3.0-only distribution
+
+FoxFetch's own code is licensed under GPL-3.0-only; see LICENSE and COPYRIGHT.md.
+The original third-party copyright notices and license texts remain in place.
+
+The unmodified Mediabunny 1.55.4 and MP3 encoder sources use MPL-2.0 and do not
+carry an Exhibit B incompatibility notice in their source headers. When combined
+with FoxFetch as a GPLv3 larger work, those covered sources are also available
+under GPLv3 as permitted by MPL-2.0 section 3.3; their MPL notices are retained.
+The LAME source continues to carry its GNU Library GPL version 2-or-later
+notice. The protobuf Apache-2.0 and BSD-3-Clause notices remain applicable.
+
+Corresponding third-party sources and component replacement instructions are
+available through THIRD_PARTY_SOURCES.md and the release's source attachments.
+The project GPL grant does not replace third-party terms or remove obligations
+to provide their covered source.

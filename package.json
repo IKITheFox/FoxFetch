@@ -1,6 +1,13 @@
 {
   "name": "foxfetch",
   "version": "1.0.0",
+  "license": "GPL-3.0-only",
+  "author": "IKITheFox",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IKITheFox/FoxFetch.git"
+  },
+  "bugs": "https://github.com/IKITheFox/FoxFetch/issues",
   "description": "FoxFetch - 网页媒体下载与播放控制浏览器扩展",
   "type": "module",
   "private": true,
