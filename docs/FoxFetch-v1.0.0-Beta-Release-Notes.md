@@ -25,7 +25,7 @@ Download **[FoxFetch-v1.0.0-Beta-chrome.zip](https://github.com/IKITheFox/FoxFet
 
 GitHub's automatic Source code archives are not ready-to-load installation packages.
 
-This is a pre-release. Download only content you own or are authorized to download. Site availability, browser resources, and server verification can limit downloads. FoxFetch does not bypass DRM or paid-access restrictions.
+This version retains its Beta designation and is listed as the latest release on GitHub. Download only content you own or are authorized to download. Site availability, browser resources, and server verification can limit downloads. FoxFetch does not bypass DRM or paid-access restrictions.
 
 ## Licensing update
 
@@ -51,7 +51,7 @@ FoxFetch Chrome 扩展首次公开 Beta 发布，提供：
 
 附件中的 `chrome.zip` 为安装包，`source.zip` 为原始 Beta 项目源码，`third-party-sources.zip` 为第三方源码与构建材料，`SHA256SUMS.txt` 为三个 ZIP 的校验值。GitHub 自动生成的 Source code 下载不是可直接加载的安装包。
 
-此版本为预发布版。仅下载你拥有或获准下载的内容；网站可用性、浏览器资源与服务端验证可能限制下载。FoxFetch 不绕过 DRM 或付费访问限制。
+此版本保留 Beta 名称，并在 GitHub 上标记为 Latest。仅下载你拥有或获准下载的内容；网站可用性、浏览器资源与服务端验证可能限制下载。FoxFetch 不绕过 DRM 或付费访问限制。
 
 ### 许可更新
 

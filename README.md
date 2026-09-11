@@ -8,7 +8,7 @@
 
 # FoxFetch
 
-Web media discovery, playback controls, and downloads for Chrome.
+Web media discovery, playback controls, and downloads for Chrome, with YouTube and Bilibili support.
 
 English | [简体中文](README.zh-CN.md)
 
@@ -68,9 +68,7 @@ Grant site access when the requested feature needs it. Drag Chrome's side-panel 
 
 Media processing takes place on your device. Detection and downloads still communicate with the source website or its media servers.
 
-FoxFetch uses site access to detect media, download permissions to save files, and browser storage for settings and task state. Browser account synchronization may sync supported settings. For details, see [Privacy and permissions](docs/PRIVACY.md).
-
-Diagnostics can contain media titles, source information, and task details. Remove private information before sharing them. Never post cookies, access tokens, signed media URLs, or private videos in public issues.
+Settings may use browser synchronization. Review [Privacy and permissions](docs/PRIVACY.md) for storage, site access, and diagnostic details. Remove private information before sharing diagnostics.
 
 ## Development
 
@@ -100,8 +98,8 @@ CI runs type checks, unit tests, and a production build. These checks do not rep
 
 Copyright © IKITheFox
 
-FoxFetch's own code is licensed under **GNU GPL version 3 only (`GPL-3.0-only`)**. See [LICENSE](LICENSE) and [licensing scope](COPYRIGHT.md).
+Licensed under **GPL-3.0-only**. See [LICENSE](LICENSE) and [Copyright and licensing scope](COPYRIGHT.md).
 
-Third-party components retain their own copyright and license notices. See [Third-party notices](THIRD_PARTY_NOTICES.md) and [source and rebuild instructions](THIRD_PARTY_SOURCES.md). The original Beta tag and release archives remain unchanged; the later licensing grant is documented in [COPYRIGHT.md](COPYRIGHT.md).
+Third-party components retain their original licenses. See [Third-party notices](THIRD_PARTY_NOTICES.md) and [Source and rebuild instructions](THIRD_PARTY_SOURCES.md).
 
 FoxFetch is not affiliated with or endorsed by Google, YouTube, Bilibili, or other referenced platform providers.

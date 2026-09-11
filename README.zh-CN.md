@@ -8,7 +8,7 @@
 
 # FoxFetch
 
-适用于 Chrome 的网页媒体识别、播放控制与下载扩展。
+适用于 Chrome 的网页媒体识别、播放控制与下载扩展，已支持 YouTube 和 Bilibili。
 
 [English](README.md) | 简体中文
 
@@ -68,9 +68,7 @@ GitHub 发布新版本后，手动加载的扩展不会自动更新。
 
 媒体在本机处理。资源识别和下载仍会与原网站或其媒体服务器通信。
 
-FoxFetch 使用网站访问权限识别媒体、下载权限保存文件，并通过浏览器存储保存设置和任务状态。浏览器的账号同步服务可能同步受支持的设置。详见[隐私与权限说明](docs/PRIVACY.zh-CN.md)。
-
-诊断信息可能包含媒体标题、来源信息及任务详情。分享前请移除私人信息，不要在公开 Issue 中提交 Cookie、访问令牌、带签名的媒体链接或私人视频。
+部分设置可能通过浏览器同步。存储、网站访问权限及诊断信息的详情见[隐私与权限说明](docs/PRIVACY.zh-CN.md)。分享诊断信息前请移除私人内容。
 
 ## 开发
 
@@ -100,8 +98,8 @@ pnpm build
 
 Copyright © IKITheFox
 
-FoxFetch 自有代码采用 **GNU GPL 仅第 3 版（`GPL-3.0-only`）**，详见 [LICENSE](LICENSE) 和[许可适用范围](COPYRIGHT.md)。
+采用 **GPL-3.0-only** 许可证，详见 [LICENSE](LICENSE) 和[版权与许可适用范围](COPYRIGHT.md)。
 
-第三方组件保留各自版权与许可声明，详见[第三方说明](THIRD_PARTY_NOTICES.md)及[源码与构建说明](THIRD_PARTY_SOURCES.md)。原始 Beta 标签与发布附件保持不变，后续许可授权记录在 [COPYRIGHT.md](COPYRIGHT.md) 中。
+第三方组件保留原有许可证，详见[第三方说明](THIRD_PARTY_NOTICES.md)及[源码与构建说明](THIRD_PARTY_SOURCES.md)。
 
 FoxFetch 与 Google、YouTube、Bilibili 等提及的平台提供方无隶属或背书关系。
