@@ -12,13 +12,13 @@ Initial public Beta of the FoxFetch Chrome extension.
 
 ## Download and install
 
-Download **[FoxFetch-v1.0.0-Beta-chrome.zip](https://github.com/IKITheFox/FoxFetch/releases/download/v1.0.0-Beta/FoxFetch-v1.0.0-Beta-chrome.zip)**. Extract it, open `chrome://extensions/`, enable **Developer mode**, and choose **Load unpacked**. Select the folder containing `manifest.json`.
+Download **[FoxFetch-v1.0.0-Beta-chrome.zip](https://github.com/IKITheFox/FoxFetch/releases/download/v1.0.0-Beta/FoxFetch-v1.0.0-Beta-chrome.zip)**. Open `chrome://extensions/`, enable **Developer mode**, and drag the ZIP from your file manager onto the page. Chrome extracts it automatically. If this fails, extract the ZIP into a permanent folder, choose **Load unpacked**, and select the folder containing `manifest.json`. Keep that folder in place while the extension is installed.
 
 [Full installation guide](https://github.com/IKITheFox/FoxFetch#installation) · [Report an issue](https://github.com/IKITheFox/FoxFetch/issues/new/choose)
 
 | Asset                                          | Purpose                                                 |
 | ---------------------------------------------- | ------------------------------------------------------- |
-| `FoxFetch-v1.0.0-Beta-chrome.zip`              | Ready-to-load Chrome extension after extraction.        |
+| `FoxFetch-v1.0.0-Beta-chrome.zip`              | Chrome installation ZIP; drag onto the extensions page.        |
 | `FoxFetch-v1.0.0-Beta-source.zip`              | FoxFetch project source for the original Beta snapshot. |
 | `FoxFetch-v1.0.0-Beta-third-party-sources.zip` | Third-party source and rebuild materials.               |
 | `SHA256SUMS.txt`                               | SHA256 checksums for the three ZIP files.               |
@@ -45,7 +45,7 @@ FoxFetch Chrome 扩展首次公开 Beta 发布，提供：
 
 ### 下载与安装
 
-下载 **[FoxFetch-v1.0.0-Beta-chrome.zip](https://github.com/IKITheFox/FoxFetch/releases/download/v1.0.0-Beta/FoxFetch-v1.0.0-Beta-chrome.zip)** 并解压。打开 `chrome://extensions/`，启用**开发者模式**，选择**加载已解压的扩展程序**，指定包含 `manifest.json` 的目录。
+下载 **[FoxFetch-v1.0.0-Beta-chrome.zip](https://github.com/IKITheFox/FoxFetch/releases/download/v1.0.0-Beta/FoxFetch-v1.0.0-Beta-chrome.zip)**。打开 `chrome://extensions/`，启用**开发者模式**，从文件管理器将 ZIP 拖入该页面，Chrome 会自动解压。如无法安装，再将 ZIP 解压到固定目录，选择**加载已解压的扩展程序**，指定包含 `manifest.json` 的目录；使用期间请勿删除或移动该解压目录。
 
 [完整安装说明](https://github.com/IKITheFox/FoxFetch/blob/main/README.zh-CN.md#安装) · [反馈问题](https://github.com/IKITheFox/FoxFetch/issues/new/choose)
 

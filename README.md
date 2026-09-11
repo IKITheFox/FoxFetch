@@ -32,19 +32,34 @@ FoxFetch is a Manifest V3 extension that combines a media resource sidebar with 
 
 Requires **Chrome 120 or later**. Use an up-to-date Chrome release. Other Chromium browsers may not support every extension API used by FoxFetch.
 
+### Option 1: Drag and drop the ZIP
+
 1. Open the [v1.0.0 Beta release](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.0-Beta) and download **`FoxFetch-v1.0.0-Beta-chrome.zip`**.
-2. Extract the ZIP into a permanent folder. Do not delete or move it after installation.
-3. Open `chrome://extensions/` and enable **Developer mode**.
-4. Choose **Load unpacked** and select the folder containing `manifest.json`.
-5. Pin FoxFetch to the toolbar and refresh the media page.
+2. Open `chrome://extensions/` and enable **Developer mode**.
+3. Drag the ZIP from your file manager onto the extensions page. Chrome extracts the package automatically; no manual extraction is required.
+4. Wait for FoxFetch to appear in the extension list, then pin it to the toolbar and refresh the media page.
+
+Drop the ZIP onto the extensions page, not onto a regular web page. If drag-and-drop installation is unavailable or fails, use Option 2.
+
+### Option 2: Extract and load unpacked
+
+1. Extract the installation ZIP into a permanent folder.
+2. Open `chrome://extensions/` and enable **Developer mode**.
+3. Choose **Load unpacked** and select the extracted folder containing `manifest.json`.
+4. Pin FoxFetch to the toolbar and refresh the media page.
+
+**Keep the extracted folder in place while the extension is installed.** This requirement applies to Option 2, not to the original ZIP used for Option 1.
 
 The project-source and third-party-source archives are for developers, not installation. GitHub's automatic **Source code** downloads are also not ready-to-load extensions.
 
 ### Updating
 
-Finish or cancel active downloads. Back up the installed folder, replace its contents with the new package, and select **Reload** on Chrome's extensions page. Refresh media pages afterward. Keep only one copy enabled.
+Finish or cancel active downloads before updating. Record any settings you want to retain.
 
-Unpacked installations do not update automatically when a new GitHub release is published.
+- **ZIP installation:** download the new installation ZIP and drag it onto `chrome://extensions/` with Developer mode enabled. If Chrome adds a separate copy, disable the old copy before using the new one. Do not assume settings will transfer between copies.
+- **Extracted-folder installation:** back up the installed folder, replace its contents with the extracted new package, and select **Reload** on Chrome's extensions page. Keep the folder path unchanged.
+
+Refresh media pages afterward and keep only one copy enabled. These manual installations do not update automatically when a new GitHub release is published.
 
 ## Usage
 
