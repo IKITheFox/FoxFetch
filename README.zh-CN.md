@@ -1,4 +1,10 @@
-<p align="center"><img src="public/icons/foxfetch.svg" width="88" alt="FoxFetch"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/icons/foxfetch-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="public/icons/foxfetch.svg">
+    <img src="public/icons/foxfetch.svg" width="88" alt="FoxFetch">
+  </picture>
+</p>
 
 # FoxFetch
 
