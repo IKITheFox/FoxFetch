@@ -1,5 +1,5 @@
 import { t as uiText } from '../shared/i18n';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { MediaAsset } from '../shared/types';
 import { mediaArtworkDisplayUrl } from '../modules/media-products/media-artwork';
@@ -72,9 +72,24 @@ export function MediaCard({
   resolving = false,
 }: MediaCardProps) {
   const [failedPreview, setFailedPreview] = useState<string>();
+  const [inlinePreview, setInlinePreview] = useState<{ token: string; url: string }>();
+  const inlineToken = asset.inlineImage?.token;
+  const inlineTabId = asset.inlineImage?.tabId;
+  useEffect(() => {
+    let cancelled = false;
+    if (inlineToken && inlineTabId != null) {
+      void chrome.runtime.sendMessage({ type: 'GET_INLINE_IMAGE_PREVIEW', tabId: inlineTabId, assetId: asset.id, token: inlineToken })
+        .then((response) => {
+          if (!cancelled && response?.ok && typeof response.data === 'string' && response.data.startsWith('data:image/') && response.data.length <= 128 * 1024) {
+            setInlinePreview({ token: inlineToken, url: response.data });
+          }
+        }).catch(() => undefined);
+    }
+    return () => { cancelled = true; };
+  }, [asset.id, inlineToken, inlineTabId]);
   const meta = kindMeta[asset.kind];
   const previewUrl = mediaArtworkDisplayUrl(
-    asset.kind === 'image' ? asset.url : asset.poster,
+    asset.kind === 'image' ? (inlineToken && inlinePreview?.token === inlineToken ? inlinePreview.url : asset.url) : asset.poster,
     asset.pageUrl,
   );
   const previewAttempt = `${asset.id}\u0000${previewUrl ?? ''}`;

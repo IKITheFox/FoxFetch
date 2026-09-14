@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../storage/session-budget';
 import { BlobCaptureSessionRegistry, type BlobCaptureSession } from './capture-session';
 
 const CAPTURE_SESSIONS_KEY = 'foxfetch:source-capture-sessions';
@@ -7,7 +8,7 @@ let mutationTail: Promise<void> = Promise.resolve();
 
 async function loadRegistry(): Promise<BlobCaptureSessionRegistry> {
   const registry = new BlobCaptureSessionRegistry();
-  const stored = await chrome.storage.session.get(CAPTURE_SESSIONS_KEY);
+  const stored = await budgetedSessionStorage.get(CAPTURE_SESSIONS_KEY);
   const snapshots = stored[CAPTURE_SESSIONS_KEY];
   if (!Array.isArray(snapshots)) return registry;
 
@@ -31,7 +32,7 @@ async function registry(): Promise<BlobCaptureSessionRegistry> {
 }
 
 async function persist(value: BlobCaptureSessionRegistry): Promise<void> {
-  await chrome.storage.session.set({ [CAPTURE_SESSIONS_KEY]: value.list() });
+  await budgetedSessionStorage.set({ [CAPTURE_SESSIONS_KEY]: value.list() });
 }
 
 export async function readCaptureSessions(): Promise<BlobCaptureSession[]> {
@@ -54,7 +55,13 @@ export function mutateCaptureSessions<T>(
     const value = await registry();
     value.pruneExpired();
     const output = await operation(value);
-    await persist(value);
+    try {
+      await persist(value);
+    } catch (error) {
+      // Discard uncommitted mutations; reload the last durable state on retry.
+      registryPromise = undefined;
+      throw error;
+    }
     return output;
   });
   mutationTail = result.then(

@@ -9,7 +9,7 @@ export default defineConfig({
     build: { modulePreload: false },
   }),
   manifest: {
-    version_name: '1.0.0 Beta',
+    version_name: '1.0.2 Beta',
     name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',
     default_locale: 'zh_CN',

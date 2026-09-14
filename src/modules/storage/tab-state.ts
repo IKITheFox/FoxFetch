@@ -1,3 +1,4 @@
+import { budgetedSessionStorage, compactManifestHistory, estimateSessionBytes, SESSION_QUOTA_MESSAGE } from './session-budget';
 import { MAX_ASSETS_PER_TAB, TAB_STATE_PREFIX } from '../../shared/constants';
 import type {
   AgentSnapshot,
@@ -13,7 +14,25 @@ import { captureProtectedAssetIds, isExpiredNetworkAsset } from './network-reten
 import type { NetworkRequestContext } from '../network/observer';
 
 const memoryCache = new Map<number, TabMediaState>();
-const mainWorldSnapshotMemory = new Map<number, PersistedMainWorldAssetSnapshotStore>();
+const MEMORY_CACHE_BUDGET = 4 * 1024 * 1024;
+const memoryCacheBytes = new Map<number, number>();
+
+function rememberTabState(state: TabMediaState): void {
+  memoryCache.delete(state.tabId);
+  memoryCacheBytes.delete(state.tabId);
+  const bytes = estimateSessionBytes(state);
+  // Session storage remains authoritative; large records need not be duplicated in memory.
+  if (bytes > MEMORY_CACHE_BUDGET) return;
+  let used = [...memoryCacheBytes.values()].reduce((sum, size) => sum + size, 0);
+  for (const tabId of memoryCache.keys()) {
+    if (used + bytes <= MEMORY_CACHE_BUDGET) break;
+    used -= memoryCacheBytes.get(tabId) ?? 0;
+    memoryCache.delete(tabId);
+    memoryCacheBytes.delete(tabId);
+  }
+  memoryCache.set(state.tabId, structuredClone(state));
+  memoryCacheBytes.set(state.tabId, bytes);
+}
 const MAIN_WORLD_SNAPSHOT_PREFIX = 'foxfetch:main-world-assets:';
 const MAIN_WORLD_SNAPSHOT_STORE_VERSION = 2 as const;
 const MAX_MAIN_WORLD_SNAPSHOTS_PER_TAB = 12;
@@ -82,7 +101,7 @@ async function readPendingNetworkAssetStore(
   tabId: number,
 ): Promise<PersistedPendingNetworkAssetStore> {
   const storageKey = pendingNetworkAssetKey(tabId);
-  const stored = (await chrome.storage.session.get(storageKey))[storageKey] as
+  const stored = (await budgetedSessionStorage.get(storageKey))[storageKey] as
     Partial<PersistedPendingNetworkAssetStore> | undefined;
   return stored?.version === PENDING_NETWORK_ASSET_STORE_VERSION &&
     Array.isArray(stored.entries) &&
@@ -121,10 +140,17 @@ export async function appendPendingNetworkAsset(
   now = Date.now(),
 ): Promise<void> {
   await mutatePendingNetworkAssets(tabId, async (entries) => {
+    const byteBudget = 512 * 1024;
+    if (estimateSessionBytes([entry]) > byteBudget) throw new Error(SESSION_QUOTA_MESSAGE);
     const next = [...entries.filter((candidate) => candidate.expiresAt > now), entry].slice(
       -maxEntries,
     );
-    await chrome.storage.session.set({
+    // Same FIFO retention as the count limit, without truncating ownership or signed URLs.
+    let bytes = estimateSessionBytes(next);
+    while (bytes > byteBudget && next.length > 1) {
+      bytes -= estimateSessionBytes(next.shift()) + 2;
+    }
+    await budgetedSessionStorage.set({
       [pendingNetworkAssetKey(tabId)]: {
         version: PENDING_NETWORK_ASSET_STORE_VERSION,
         entries: next,
@@ -143,15 +169,15 @@ export async function peekPendingNetworkAssets(
 ): Promise<PersistedPendingNetworkAsset[]> {
   return mutatePendingNetworkAssets(tabId, async (entries) => {
     const live = entries.filter((candidate) => candidate.expiresAt > now);
-    if (live.length > 0) {
-      await chrome.storage.session.set({
+    if (live.length > 0 && live.length !== entries.length) {
+      await budgetedSessionStorage.set({
         [pendingNetworkAssetKey(tabId)]: {
           version: PENDING_NETWORK_ASSET_STORE_VERSION,
           entries: live,
         } satisfies PersistedPendingNetworkAssetStore,
       });
-    } else {
-      await chrome.storage.session.remove(pendingNetworkAssetKey(tabId));
+    } else if (live.length === 0) {
+      await budgetedSessionStorage.remove(pendingNetworkAssetKey(tabId));
     }
     return live;
   });
@@ -186,21 +212,21 @@ export async function acknowledgePendingNetworkAssets(
       (entry) => entry.expiresAt > now && !fingerprints.has(pendingNetworkAssetFingerprint(entry)),
     );
     if (next.length > 0) {
-      await chrome.storage.session.set({
+      await budgetedSessionStorage.set({
         [pendingNetworkAssetKey(tabId)]: {
           version: PENDING_NETWORK_ASSET_STORE_VERSION,
           entries: next,
         } satisfies PersistedPendingNetworkAssetStore,
       });
     } else {
-      await chrome.storage.session.remove(pendingNetworkAssetKey(tabId));
+      await budgetedSessionStorage.remove(pendingNetworkAssetKey(tabId));
     }
   });
 }
 
 export async function clearPendingNetworkAssets(tabId: number): Promise<void> {
   await mutatePendingNetworkAssets(tabId, async () => {
-    await chrome.storage.session.remove(pendingNetworkAssetKey(tabId));
+    await budgetedSessionStorage.remove(pendingNetworkAssetKey(tabId));
   });
 }
 
@@ -249,16 +275,13 @@ function isBilibiliVideoRoute(pageUrl: string): boolean {
 async function getMainWorldSnapshotStore(
   tabId: number,
 ): Promise<PersistedMainWorldAssetSnapshotStore> {
-  const memory = mainWorldSnapshotMemory.get(tabId);
-  if (memory) return memory;
   const storageKey = mainWorldSnapshotKey(tabId);
-  const stored = (await chrome.storage.session.get(storageKey))[storageKey];
+  const stored = (await budgetedSessionStorage.get(storageKey))[storageKey];
   const store = isPersistedMainWorldAssetSnapshotStore(stored)
     ? stored
     : isPersistedMainWorldAssetSnapshot(stored)
       ? { version: MAIN_WORLD_SNAPSHOT_STORE_VERSION, entries: [stored] }
       : { version: MAIN_WORLD_SNAPSHOT_STORE_VERSION, entries: [] };
-  mainWorldSnapshotMemory.set(tabId, store);
   return store;
 }
 
@@ -350,22 +373,20 @@ export async function saveMainWorldAssetSnapshot(
       .slice(0, MAX_ASSETS_PER_TAB),
     validatedAt: Date.now(),
   };
-  const entries = [snapshot, ...store.entries.filter((entry) => entry !== previousSnapshot)].slice(
+  const entries = compactManifestHistory([snapshot, ...store.entries.filter((entry) => entry !== previousSnapshot)].slice(
     0,
     MAX_MAIN_WORLD_SNAPSHOTS_PER_TAB,
-  );
+  ));
   const nextStore: PersistedMainWorldAssetSnapshotStore = {
     version: MAIN_WORLD_SNAPSHOT_STORE_VERSION,
     entries,
   };
-  mainWorldSnapshotMemory.set(tabId, nextStore);
-  await chrome.storage.session.set({ [mainWorldSnapshotKey(tabId)]: nextStore });
+  await budgetedSessionStorage.set({ [mainWorldSnapshotKey(tabId)]: nextStore });
   return snapshot.assets.map((asset) => ({ ...asset }));
 }
 
 export async function clearMainWorldAssetSnapshot(tabId: number): Promise<void> {
-  mainWorldSnapshotMemory.delete(tabId);
-  await chrome.storage.session.remove(mainWorldSnapshotKey(tabId));
+  await budgetedSessionStorage.remove(mainWorldSnapshotKey(tabId));
 }
 
 export interface RouteTransitionStateOptions {
@@ -401,14 +422,29 @@ export function createRouteTransitionState(
 
 export async function getTabState(tabId: number): Promise<TabMediaState | undefined> {
   const cached = memoryCache.get(tabId);
-  if (cached) return cached;
-  const stored = await chrome.storage.session.get(key(tabId));
+  if (cached) return structuredClone(cached);
+  const stored = await budgetedSessionStorage.get(key(tabId));
   const state = stored[key(tabId)] as TabMediaState | undefined;
-  if (state) memoryCache.set(tabId, state);
+  if (state) state.assets = state.assets.map(stripPersistedImageBody);
+  if (state) rememberTabState(state);
   return state;
 }
 
+/** Caller holds the tab mutation queue so migration cannot overwrite a fresh scan. */
+export async function migrateTabInlineImages(tabId: number): Promise<void> {
+  const stored = (await budgetedSessionStorage.get(key(tabId)))[key(tabId)] as TabMediaState | undefined;
+  if (!stored || !Array.isArray(stored.assets)) return;
+  const assets = stored.assets.map(stripPersistedImageBody);
+  if (assets.some((asset, index) => asset !== stored.assets[index])) {
+    await setTabState({ ...stored, assets });
+  }
+}
+
 export async function setTabState(state: TabMediaState): Promise<TabMediaState> {
+  state.assets = state.assets.map((asset) => {
+    const safe = stripPersistedImageBody(asset);
+    return safe.inlineImage ? { ...safe, inlineImage: { ...safe.inlineImage, tabId: state.tabId } } : safe;
+  });
   // v0.14.0 is a discovery release. Network-observed tracks are not proof of
   // complete YouTube downloads and must not bypass the candidate-only UI.
   if (isYouTubePage(state.pageUrl)) {
@@ -416,8 +452,8 @@ export async function setTabState(state: TabMediaState): Promise<TabMediaState> 
       asset.kind === 'image' ? asset : { ...asset, downloadable: false },
     );
   }
-  memoryCache.set(state.tabId, state);
-  await chrome.storage.session.set({ [key(state.tabId)]: state });
+  await budgetedSessionStorage.set({ [key(state.tabId)]: state });
+  rememberTabState(state);
   return state;
 }
 
@@ -538,7 +574,8 @@ export async function mergeAgentSnapshots(
 
 export async function clearTabState(tabId: number): Promise<void> {
   memoryCache.delete(tabId);
-  mainWorldSnapshotMemory.delete(tabId);
+  memoryCacheBytes.delete(tabId);
   await clearPendingNetworkAssets(tabId);
-  await chrome.storage.session.remove([key(tabId), mainWorldSnapshotKey(tabId)]);
+  await budgetedSessionStorage.remove([key(tabId), mainWorldSnapshotKey(tabId)]);
 }
+import { stripPersistedImageBody } from '../detector/inline-images';

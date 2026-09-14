@@ -1,3 +1,4 @@
+import { isSessionQuotaError } from '../storage/session-budget';
 import { t as uiText } from '../../shared/i18n';
 import { subscribeLanguage } from '../../shared/i18n';
 import { messageText } from '../../shared/i18n/legacy-message';
@@ -1167,7 +1168,7 @@ export class FloatingPlaybackController {
       container.className = 'settings-frame-container';
       const style = this.doc.createElement('style');
       style.textContent =
-        ':host([data-settings-open]){display:block!important}:host([data-settings-open]) .launcher{display:none!important}:host([data-settings-open]) .panel{display:flex!important;height:85dvh;max-height:85dvh}:host([data-settings-open]) .panel > :not(.settings-frame-container){display:none!important}.settings-frame-container{display:block;flex:1;min-height:0;width:100%;height:100%}';
+        ':host([data-settings-open]){display:block!important}:host([data-settings-open]) .launcher{display:none!important}:host([data-settings-open]) .panel{display:flex!important;height:85dvh;max-height:85dvh;overflow:clip;overflow-anchor:none}:host([data-settings-open]) .panel > :not(.settings-frame-container){display:none!important}.settings-frame-container{display:block;flex:1;min-height:0;width:100%;height:100%}';
       this.shadowRoot.append(style);
       const children = Array.from(panel.children) as HTMLElement[];
       const previousInert = children.map((child) => child.inert);
@@ -1183,6 +1184,9 @@ export class FloatingPlaybackController {
         this.settingsFrame = undefined;
         this.settingsOpening = undefined;
         delete this.host.dataset.settingsOpen;
+        panel.style.removeProperty('width');
+        panel.style.removeProperty('height');
+        panel.style.removeProperty('max-height');
         style.remove();
         children.forEach((child, index) => {
           child.inert = previousInert[index]!;
@@ -2140,7 +2144,7 @@ export class FloatingPlaybackController {
               (this.resourceSnapshot.status === 'loading'
                 ? uiText('E1136')
                 : this.resourceSnapshot.status === 'error'
-                  ? uiText('E1137')
+                  ? uiText(isSessionQuotaError(this.resourceSnapshot.error) ? 'E_STORAGE_FULL' : 'E1137')
                   : uiText('E1102')))
             : this.playbackStatusLabel(),
     );
@@ -2794,7 +2798,7 @@ export class FloatingPlaybackController {
       title.textContent = uiText('E1181');
       detail.textContent = messageText(snapshot.message ?? uiText('E1182'));
     } else if (snapshot.status === 'error') {
-      title.textContent = uiText('E1183');
+      title.textContent = uiText(isSessionQuotaError(snapshot.error) ? 'E_STORAGE_FULL' : 'E1183');
       detail.textContent = messageText(snapshot.error ?? uiText('E1184'));
     } else if (snapshot.status === 'ready') {
       title.textContent = uiText('E1185');
@@ -2805,7 +2809,7 @@ export class FloatingPlaybackController {
     }
     copy.append(title, detail);
     state.append(copy);
-    if (snapshot.status !== 'loading') {
+    if (snapshot.status !== 'loading' && !isSessionQuotaError(snapshot.error)) {
       const cacheButton = this.doc.createElement('button');
       cacheButton.type = 'button';
       cacheButton.className = 'cache-button';
@@ -5205,6 +5209,11 @@ export class FloatingPlaybackController {
     const viewport = this.getViewportBounds();
     const availableWidth = Math.max(1, viewport.width - DOCK_VIEWPORT_MARGIN * 2);
     const availableHeight = Math.max(1, viewport.height - DOCK_VIEWPORT_MARGIN * 2);
+    if (this.host.dataset.settingsOpen) {
+      panel.style.width = `${Math.min(410, availableWidth)}px`;
+      panel.style.height = `${Math.min(viewport.height * 0.85, availableHeight)}px`;
+      panel.style.maxHeight = `${availableHeight}px`;
+    }
     const panelRect = panel.getBoundingClientRect();
     const panelWidth = Math.min(
       panel.offsetWidth || panelRect.width || Math.min(410, availableWidth),

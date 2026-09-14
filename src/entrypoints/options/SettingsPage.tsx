@@ -163,10 +163,10 @@ export function App({
   };
   const dismissConfirm = () => {
     setConfirmClose(false);
-    previousFocus.current?.focus();
+    previousFocus.current?.focus({ preventScroll: true });
   };
   useEffect(() => {
-    if (confirmClose) cancelFocus.current?.focus();
+    if (confirmClose) cancelFocus.current?.focus({ preventScroll: true });
   }, [confirmClose]);
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
@@ -310,274 +310,289 @@ export function App({
           ×
         </Button>
       </header>
-      <fieldset
-        className="settings-content"
-        inert={confirmClose}
-        disabled={committing}
-        aria-label={uiText('E0399')}
-      >
-        {embedded && new URLSearchParams(location.search).get('fallback') === '1' && (
-          <p className="settings-note">{uiText('E0400')}</p>
-        )}
-        {error || notice ? (
-          <InlineNotice tone={error ? 'error' : notice!.tone}>{error ?? notice!.text}</InlineNotice>
-        ) : null}
-        <section aria-labelledby="playback-heading">
-          <h2 id="playback-heading">{uiText('E0401')}</h2>
-          <div className="settings-panel">
-            <div className="setting-row">
-              <span>{t('language.label')}</span>
-              <div className="settings-segments" aria-label={t('language.label')}>
-                {(
-                  [
-                    ['zh-CN', '中文'],
-                    ['en', 'English'],
-                  ] as const
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={normalizeLanguage(draft.uiLanguage) === value}
-                    onClick={() => update({ ...draft, uiLanguage: value })}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="setting-row">
-              <span>{uiText('E0402')}</span>
-              <div className="settings-segments" aria-label={uiText('E0402')}>
-                {(
-                  [
-                    ['auto', uiText('E0107')],
-                    ['light', uiText('E0403')],
-                    ['dark', uiText('E0404')],
-                  ] as const
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={draft.themeMode === value}
-                    onClick={() => update({ ...draft, themeMode: value })}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <Toggle
-              label={uiText('E0405')}
-              checked={draft.playback.showController}
-              onChange={(showController) => playback({ showController })}
-            />
-            {number(
-              'default-rate',
-              uiText('E0406'),
-              draft.playback.defaultRate,
-              0.0625,
-              16,
-              (defaultRate) => playback({ defaultRate }),
-              'any',
-              'rate',
-            )}
-            <Toggle
-              label={uiText('E0407')}
-              checked={draft.playback.lockRate}
-              onChange={(lockRate) => playback({ lockRate })}
-            />
-            <details open={!!validation.seek}>
-              <summary>{uiText('E0408')}</summary>
-              <Toggle
-                label={uiText('E0409')}
-                checked={draft.playback.preservesPitch}
-                onChange={(preservesPitch) => playback({ preservesPitch })}
-              />
-              {number(
-                'seek-step',
-                uiText('E0410'),
-                draft.playback.seekStep,
-                1,
-                120,
-                (seekStep) => playback({ seekStep }),
-                'any',
-                'seek',
-              )}
+      <div className={embedded ? 'settings-content settings-scroll' : undefined}>
+        <fieldset
+          className={embedded ? 'settings-fields' : 'settings-content'}
+          inert={confirmClose}
+          disabled={committing}
+          aria-label={uiText('E0399')}
+        >
+          {embedded && new URLSearchParams(location.search).get('fallback') === '1' && (
+            <p className="settings-note">{uiText('E0400')}</p>
+          )}
+          {error || notice ? (
+            <InlineNotice tone={error ? 'error' : notice!.tone}>
+              {error ?? notice!.text}
+            </InlineNotice>
+          ) : null}
+          <section aria-labelledby="playback-heading">
+            <h2 id="playback-heading">{uiText('E0401')}</h2>
+            <div className="settings-panel">
               <div className="setting-row">
-                <span>
-                  {' '}
-                  {uiText('E0411')}
-                  <small>{uiText('E0412')}</small>
-                </span>
-                <Button
-                  icon="external"
-                  onClick={() => void browserPage('chrome://extensions/shortcuts')}
-                >
-                  {' '}
-                  {uiText('E0413')}{' '}
-                </Button>
+                <span>{t('language.label')}</span>
+                <div className="settings-segments" aria-label={t('language.label')}>
+                  {(
+                    [
+                      ['zh-CN', '中文'],
+                      ['en', 'English'],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={normalizeLanguage(draft.uiLanguage) === value}
+                      onClick={() => update({ ...draft, uiLanguage: value })}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </details>
-          </div>
-        </section>
-        <section aria-labelledby="download-heading">
-          <h2 id="download-heading">{uiText('E0414')}</h2>
-          <div className="settings-panel">
-            <div className="setting-row">
-              <span>{uiText('download.preference')}</span>
-              <div
-                className="settings-segments"
-                role="group"
-                aria-label={uiText('download.preference')}
-              >
-                {(['compatibility', 'quality', 'size'] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={(draft.download.preference ?? 'compatibility') === value}
-                    onClick={() => download({ preference: value })}
-                  >
-                    {uiText(`download.${value}`)}
-                  </button>
-                ))}
+              <div className="setting-row">
+                <span>{uiText('E0402')}</span>
+                <div className="settings-segments" aria-label={uiText('E0402')}>
+                  {(
+                    [
+                      ['auto', uiText('E0107')],
+                      ['light', uiText('E0403')],
+                      ['dark', uiText('E0404')],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={draft.themeMode === value}
+                      onClick={() => update({ ...draft, themeMode: value })}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="setting-row">
-              <label htmlFor="save-mode">{uiText('E0415')}</label>
-              <CustomSelect
-                id="save-mode"
-                label={uiText('E0415')}
-                value={draft.download.saveAs ? 'ask' : 'automatic'}
-                onChange={(v) => download({ saveAs: v === 'ask' })}
-                options={[
-                  {
-                    value: 'automatic',
-                    get label() {
-                      return uiText('E0416');
-                    },
-                  },
-                  {
-                    value: 'ask',
-                    get label() {
-                      return uiText('E0417');
-                    },
-                  },
-                ]}
+              <Toggle
+                label={uiText('E0405')}
+                checked={draft.playback.showController}
+                onChange={(showController) => playback({ showController })}
               />
-            </div>
-            <Toggle
-              label={uiText('E0418')}
-              description={uiText('E0419')}
-              checked={draft.autoScanGrantedSites}
-              onChange={(autoScanGrantedSites) =>
-                update({ ...draft, autoScanGrantedSites, youtubeEnabled: true })
-              }
-            />
-            {draft.youtubeEnabled === false && <p className="settings-note"> {uiText('E0420')} </p>}
-            <Toggle
-              label={uiText('E0421')}
-              checked={draft.showAdvancedMedia}
-              onChange={(showAdvancedMedia) => update({ ...draft, showAdvancedMedia })}
-            />
-            <details open={!!validation.count}>
-              <summary>{uiText('E0422')}</summary>
               {number(
-                'concurrency',
-                uiText('E0423'),
-                draft.download.concurrentDownloads,
-                1,
-                8,
-                (concurrentDownloads) => download({ concurrentDownloads }),
-                '1',
-                'count',
+                'default-rate',
+                uiText('E0406'),
+                draft.playback.defaultRate,
+                0.0625,
+                16,
+                (defaultRate) => playback({ defaultRate }),
+                'any',
+                'rate',
               )}
-              <p className="settings-note"> {uiText('E0424')} </p>
-            </details>
-          </div>
-        </section>
-        <section id="permissions" aria-labelledby="permissions-heading">
-          <h2 id="permissions-heading">{uiText('E0430')}</h2>
-          <div className="settings-panel">
-            <div className="setting-row">
-              <strong>
-                {permissionError
-                  ? uiText('E0431')
-                  : messageText(permissions?.summary ?? uiText('E0432'))}
-              </strong>
-              <Button
-                onClick={() => {
-                  setManage(!manage);
-                  if (permissionError) void refreshPermissions();
-                }}
-                aria-expanded={manage}
-              >
-                {manage ? uiText('E0433') : uiText('E0434')}
-              </Button>
-            </div>
-            <p className="settings-note">{uiText('E0435')}</p>
-            {manage && (
-              <div className="settings-permissions">
+              <Toggle
+                label={uiText('E0407')}
+                checked={draft.playback.lockRate}
+                onChange={(lockRate) => playback({ lockRate })}
+              />
+              <details open={!!validation.seek}>
+                <summary>{uiText('E0408')}</summary>
+                <Toggle
+                  label={uiText('E0409')}
+                  checked={draft.playback.preservesPitch}
+                  onChange={(preservesPitch) => playback({ preservesPitch })}
+                />
+                {number(
+                  'seek-step',
+                  uiText('E0410'),
+                  draft.playback.seekStep,
+                  1,
+                  120,
+                  (seekStep) => playback({ seekStep }),
+                  'any',
+                  'seek',
+                )}
                 <div className="setting-row">
                   <span>
                     {' '}
-                    {uiText('E0436')}
-                    <small>{uiText('E0437')}</small>
-                  </span>
-                  <Button
-                    disabled={busy || permissionError || !permissions}
-                    onClick={() => void changePermission('youtube')}
-                  >
-                    {permissions?.youtube ? uiText('E0438') : uiText('E0439')}
-                  </Button>
-                </div>
-                <div className="setting-row">
-                  <span>
-                    {' '}
-                    {uiText('E0440')}
-                    <small>{uiText('E0441')}</small>
-                  </span>
-                  <Button
-                    disabled={busy || permissionError || !permissions}
-                    onClick={() => void changePermission('full')}
-                  >
-                    {permissions?.full ? uiText('E0438') : uiText('E0439')}
-                  </Button>
-                </div>
-                <div className="setting-row">
-                  <span>
-                    {' '}
-                    {uiText('E0442')}
-                    <small>{uiText('E0443')}</small>
+                    {uiText('E0411')}
+                    <small>{uiText('E0412')}</small>
                   </span>
                   <Button
                     icon="external"
-                    onClick={() => void browserPage(`chrome://extensions/?id=${chrome.runtime.id}`)}
+                    onClick={() => void browserPage('chrome://extensions/shortcuts')}
                   >
                     {' '}
-                    {uiText('E0444')}{' '}
+                    {uiText('E0413')}{' '}
                   </Button>
                 </div>
+              </details>
+            </div>
+          </section>
+          <section aria-labelledby="download-heading">
+            <h2 id="download-heading">{uiText('E0414')}</h2>
+            <div className="settings-panel">
+              <div className="setting-row">
+                <span>{uiText('download.preference')}</span>
+                <div
+                  className="settings-segments"
+                  role="group"
+                  aria-label={uiText('download.preference')}
+                >
+                  {(['compatibility', 'quality', 'size'] as const).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={(draft.download.preference ?? 'compatibility') === value}
+                      onClick={() => download({ preference: value })}
+                    >
+                      {uiText(`download.${value}`)}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
+              <div className="setting-row">
+                <label htmlFor="save-mode">{uiText('E0415')}</label>
+                <CustomSelect
+                  id="save-mode"
+                  label={uiText('E0415')}
+                  value={draft.download.saveAs ? 'ask' : 'automatic'}
+                  onChange={(v) => download({ saveAs: v === 'ask' })}
+                  options={[
+                    {
+                      value: 'automatic',
+                      get label() {
+                        return uiText('E0416');
+                      },
+                    },
+                    {
+                      value: 'ask',
+                      get label() {
+                        return uiText('E0417');
+                      },
+                    },
+                  ]}
+                />
+              </div>
+              <Toggle
+                label={uiText('E0418')}
+                description={uiText('E0419')}
+                checked={draft.autoScanGrantedSites}
+                onChange={(autoScanGrantedSites) =>
+                  update({ ...draft, autoScanGrantedSites, youtubeEnabled: true })
+                }
+              />
+              {draft.youtubeEnabled === false && (
+                <p className="settings-note"> {uiText('E0420')} </p>
+              )}
+              <Toggle
+                label={uiText('E0421')}
+                checked={draft.showAdvancedMedia}
+                onChange={(showAdvancedMedia) => update({ ...draft, showAdvancedMedia })}
+              />
+              <details open={!!validation.count}>
+                <summary>{uiText('E0422')}</summary>
+                {number(
+                  'concurrency',
+                  uiText('E0423'),
+                  draft.download.concurrentDownloads,
+                  1,
+                  8,
+                  (concurrentDownloads) => download({ concurrentDownloads }),
+                  '1',
+                  'count',
+                )}
+                <p className="settings-note"> {uiText('E0424')} </p>
+              </details>
+            </div>
+          </section>
+          <section id="permissions" aria-labelledby="permissions-heading">
+            <h2 id="permissions-heading">{uiText('E0430')}</h2>
+            <div className="settings-panel">
+              <div className="setting-row">
+                <strong>
+                  {permissionError
+                    ? uiText('E0431')
+                    : messageText(permissions?.summary ?? uiText('E0432'))}
+                </strong>
+                <Button
+                  onClick={() => {
+                    setManage(!manage);
+                    if (permissionError) void refreshPermissions();
+                  }}
+                  aria-expanded={manage}
+                >
+                  {manage ? uiText('E0433') : uiText('E0434')}
+                </Button>
+              </div>
+              <p className="settings-note">{uiText('E0435')}</p>
+              {manage && (
+                <div className="settings-permissions">
+                  <div className="setting-row">
+                    <span>
+                      {' '}
+                      {uiText('E0436')}
+                      <small>{uiText('E0437')}</small>
+                    </span>
+                    <Button
+                      disabled={busy || permissionError || !permissions}
+                      onClick={() => void changePermission('youtube')}
+                    >
+                      {permissions?.youtube ? uiText('E0438') : uiText('E0439')}
+                    </Button>
+                  </div>
+                  <div className="setting-row">
+                    <span>
+                      {' '}
+                      {uiText('E0440')}
+                      <small>{uiText('E0441')}</small>
+                    </span>
+                    <Button
+                      disabled={busy || permissionError || !permissions}
+                      onClick={() => void changePermission('full')}
+                    >
+                      {permissions?.full ? uiText('E0438') : uiText('E0439')}
+                    </Button>
+                  </div>
+                  <div className="setting-row">
+                    <span>
+                      {' '}
+                      {uiText('E0442')}
+                      <small>{uiText('E0443')}</small>
+                    </span>
+                    <Button
+                      icon="external"
+                      onClick={() =>
+                        void browserPage(`chrome://extensions/?id=${chrome.runtime.id}`)
+                      }
+                    >
+                      {' '}
+                      {uiText('E0444')}{' '}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+          <div className="settings-bottom">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                if (window.confirm(uiText('E0445')))
+                  update({ ...structuredClone(DEFAULT_SETTINGS), youtubeEnabled: true });
+              }}
+            >
+              {' '}
+              {uiText('E0446')}{' '}
+            </Button>
+            <small>
+              v{chrome.runtime.getManifest().version_name ?? chrome.runtime.getManifest().version}
+            </small>
           </div>
-        </section>
-        <div className="settings-bottom">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (window.confirm(uiText('E0445')))
-                update({ ...structuredClone(DEFAULT_SETTINGS), youtubeEnabled: true });
-            }}
-          >
-            {' '}
-            {uiText('E0446')}{' '}
-          </Button>
-          <small>v{chrome.runtime.getManifest().version_name ?? chrome.runtime.getManifest().version}</small>
-        </div>
-        <p className="settings-copyright">Copyright © 2026 IKITheFox</p>
-      </fieldset>
-      {dirty && (
-        <footer className="settings-save" inert={confirmClose}>
+          <p className="settings-copyright">Copyright © 2026 IKITheFox</p>
+        </fieldset>
+      </div>
+      {(embedded || dirty) && (
+        <footer
+          className="settings-save"
+          inert={confirmClose || !dirty}
+          aria-hidden={!dirty}
+          style={!dirty ? { visibility: 'hidden' } : undefined}
+        >
           <span>{uiText('E0449')}</span>
           <Button disabled={saving || committing} onClick={cancel}>
             {' '}

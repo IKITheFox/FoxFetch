@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../storage/session-budget';
 import type { DownloadRecord, MediaAsset } from '../../shared/types';
 import { PERMISSION_INTENT_TTL_MS, type SessionStorageArea } from './pending-intents';
 
@@ -19,7 +20,7 @@ export interface PermissionDownloadAttempt {
 
 export class PermissionDownloadAttemptStore {
   constructor(
-    private readonly storage: SessionStorageArea = chrome.storage.session,
+    private readonly storage: SessionStorageArea = budgetedSessionStorage,
     private readonly now: () => number = Date.now,
   ) {}
 

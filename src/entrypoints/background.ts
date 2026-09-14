@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../modules/storage/session-budget';
 import { canRepeatMergeDownload, selectRepeatTracks } from '../modules/jobs/repeat-download';
 import { YouTubeSelectionPreferences } from '../modules/youtube/selection-preferences';
 import { YOUTUBE_SOURCE_PERMISSIONS } from '../modules/youtube/source-permissions';
@@ -681,7 +682,8 @@ async function startAssetDownloads(
   let records: DownloadRecord[];
   try {
     notifyDownloadActivity(() => pushDownloadActivity(tabId));
-    records = await startBatchDownloads([...selected], state.pageTitle, await getSettings(), owner);
+    records = await startBatchDownloads([...selected], state.pageTitle, await getSettings(), owner,
+      async (asset) => ({ ...asset, url: await loadInlineImage(tabId, state.pageUrl, asset, false) }));
   } finally {
     const remaining = (pendingDownloadStarts.get(pendingKey) ?? 1) - 1;
     if (remaining > 0) pendingDownloadStarts.set(pendingKey, remaining);
@@ -779,7 +781,7 @@ function cacheRestartKey(tabId: number): string {
 
 async function readCacheRestartIntent(tabId: number): Promise<CacheRestartIntent | undefined> {
   const key = cacheRestartKey(tabId);
-  const stored = await chrome.storage.session.get(key);
+  const stored = await budgetedSessionStorage.get(key);
   const storedIntent = stored[key] as Partial<CacheRestartIntent> | undefined;
   if (
     !storedIntent ||
@@ -793,7 +795,7 @@ async function readCacheRestartIntent(tabId: number): Promise<CacheRestartIntent
     return undefined;
   }
   if (storedIntent.expiresAt <= Date.now()) {
-    await chrome.storage.session.remove(key);
+    await budgetedSessionStorage.remove(key);
     return undefined;
   }
   return {
@@ -816,7 +818,7 @@ async function resetCacheAndReload(tabId: number, frameId = 0): Promise<void> {
   if (!tab.url || !canInject(tab.url)) throw new Error('当前页面无法刷新并重新捕获');
   const existing = await readCacheRestartIntent(tabId);
   if (existing?.pageUrl === tab.url && existing.attempts >= existing.maxAttempts) {
-    await chrome.storage.session.remove(cacheRestartKey(tabId));
+    await budgetedSessionStorage.remove(cacheRestartKey(tabId));
     throw new Error('刷新后仍无法启动缓存功能，请重新打开视频页面后重试。');
   }
   const now = Date.now();
@@ -830,7 +832,7 @@ async function resetCacheAndReload(tabId: number, frameId = 0): Promise<void> {
     attempts: (existing?.pageUrl === tab.url ? existing.attempts : 0) + 1,
     maxAttempts: 1,
   };
-  await chrome.storage.session.set({ [cacheRestartKey(tabId)]: intent });
+  await budgetedSessionStorage.set({ [cacheRestartKey(tabId)]: intent });
   await chrome.tabs.reload(tabId);
 }
 
@@ -841,13 +843,13 @@ async function resumeCacheRestart(tabId: number, currentUrl?: string): Promise<b
   const tab = await chrome.tabs.get(tabId).catch(() => undefined);
   const pageUrl = currentUrl ?? tab?.url;
   if (!pageUrl || pageUrl !== intent.pageUrl || !canInject(pageUrl)) {
-    await chrome.storage.session.remove(cacheRestartKey(tabId));
+    await budgetedSessionStorage.remove(cacheRestartKey(tabId));
     return false;
   }
   cacheRestartInFlight.add(tabId);
   try {
     await startMseCacheCaptureForFrame(tabId, intent.frameId, intent.pageTitle, undefined, true);
-    await chrome.storage.session.remove(cacheRestartKey(tabId));
+    await budgetedSessionStorage.remove(cacheRestartKey(tabId));
     return true;
   } catch {
     // Keep the short-lived intent so a later completed/update event can retry.
@@ -3418,7 +3420,7 @@ function mergeOutputName(job: MergeJob, extension: string): string {
 }
 
 async function hasPendingMergeExportForJob(jobId: string): Promise<boolean> {
-  const stored = await chrome.storage.session.get(null);
+  const stored = await budgetedSessionStorage.get(null);
   return (
     isPendingCustomExport(stored[pendingCustomExportKey(jobId)]) ||
     Object.entries(stored).some(
@@ -3516,7 +3518,7 @@ async function startVerifiedMergeDownloadUnlocked(
           },
         },
       };
-      await chrome.storage.session.set({ [pendingCustomExportKey(job.id)]: pending });
+      await budgetedSessionStorage.set({ [pendingCustomExportKey(job.id)]: pending });
       await sendMergeOffscreenCommand({
         channel: 'foxfetch-merge-offscreen-v1',
         target: 'offscreen',
@@ -3540,7 +3542,7 @@ async function startVerifiedMergeDownloadUnlocked(
       recordId: record.id,
     };
     await Promise.all([
-      chrome.storage.session.set({ [pendingMergeExportKey(chromeDownloadId)]: pending }),
+      budgetedSessionStorage.set({ [pendingMergeExportKey(chromeDownloadId)]: pending }),
       upsertDownloadRecord({
         ...record,
         chromeDownloadId,
@@ -3564,7 +3566,7 @@ async function startVerifiedMergeDownloadUnlocked(
       // downloads.onChanged remains authoritative where search is unavailable.
     }
   } catch (error) {
-    await chrome.storage.session.remove(pendingCustomExportKey(job.id));
+    await budgetedSessionStorage.remove(pendingCustomExportKey(job.id));
     await upsertDownloadRecord({
       ...record,
       state: 'interrupted',
@@ -3590,10 +3592,10 @@ async function finalizeMergeExport(
   error?: string,
 ): Promise<void> {
   const storageKey = pendingMergeExportKey(downloadId);
-  const stored = (await chrome.storage.session.get(storageKey))[storageKey] as
+  const stored = (await budgetedSessionStorage.get(storageKey))[storageKey] as
     PendingMergeExport | undefined;
   if (!stored) return;
-  await chrome.storage.session.remove(storageKey);
+  await budgetedSessionStorage.remove(storageKey);
   let job = await mergeJobStore.get(stored.jobId);
   if (job) {
     if (state === 'complete' && job.state !== 'completed') {
@@ -3671,11 +3673,11 @@ function separateOutcomeByKind(
 async function settlePendingSeparateGroup(group: PendingSeparateExportGroup): Promise<void> {
   const outputs = Object.values(group.outputs);
   if (outputs.some((output) => output.state === 'starting' || output.state === 'downloading')) {
-    await chrome.storage.session.set({ [pendingSeparateExportGroupKey(group.jobId)]: group });
+    await budgetedSessionStorage.set({ [pendingSeparateExportGroupKey(group.jobId)]: group });
     return;
   }
 
-  await chrome.storage.session.remove(pendingSeparateExportGroupKey(group.jobId));
+  await budgetedSessionStorage.remove(pendingSeparateExportGroupKey(group.jobId));
   let job = await mergeJobStore.get(group.jobId);
   if (job) {
     const completed = outputs.filter((output) => output.state === 'complete');
@@ -3744,15 +3746,15 @@ async function finalizeSeparateExportUnlocked(
   error?: string,
 ): Promise<void> {
   const groupKey = pendingSeparateExportGroupKey(pending.jobId);
-  const group = (await chrome.storage.session.get(groupKey))[groupKey] as
+  const group = (await budgetedSessionStorage.get(groupKey))[groupKey] as
     PendingSeparateExportGroup | undefined;
   if (!group) {
-    await chrome.storage.session.remove(pendingSeparateExportKey(downloadId));
+    await budgetedSessionStorage.remove(pendingSeparateExportKey(downloadId));
     return;
   }
   const output = group.outputs[pending.outputKind];
   if (output.downloadId !== downloadId || output.state !== 'downloading') {
-    await chrome.storage.session.remove(pendingSeparateExportKey(downloadId));
+    await budgetedSessionStorage.remove(pendingSeparateExportKey(downloadId));
     return;
   }
   group.outputs[pending.outputKind] = {
@@ -3763,8 +3765,8 @@ async function finalizeSeparateExportUnlocked(
       : {}),
   };
   await Promise.all([
-    chrome.storage.session.remove(pendingSeparateExportKey(downloadId)),
-    chrome.storage.session.set({ [groupKey]: group }),
+    budgetedSessionStorage.remove(pendingSeparateExportKey(downloadId)),
+    budgetedSessionStorage.set({ [groupKey]: group }),
   ]);
   await settlePendingSeparateGroup(group);
 }
@@ -3775,7 +3777,7 @@ async function finalizeSeparateExport(
   error?: string,
 ): Promise<void> {
   const storageKey = pendingSeparateExportKey(downloadId);
-  const pending = (await chrome.storage.session.get(storageKey))[storageKey] as
+  const pending = (await budgetedSessionStorage.get(storageKey))[storageKey] as
     PendingSeparateExport | undefined;
   if (!pending || !isPendingSeparateExport(pending)) return;
   const previous = separateExportFinalizers.get(pending.jobId) ?? Promise.resolve();
@@ -3793,7 +3795,7 @@ async function finalizeSeparateExport(
 
 async function hasPendingSeparateExportForJob(jobId: string): Promise<boolean> {
   const keys = [pendingSeparateExportGroupKey(jobId), pendingCustomExportKey(jobId)];
-  const stored = await chrome.storage.session.get(keys);
+  const stored = await budgetedSessionStorage.get(keys);
   return isPendingSeparateExportGroup(stored[keys[0]!]) || isPendingCustomExport(stored[keys[1]!]);
 }
 
@@ -3852,7 +3854,7 @@ async function startVerifiedSeparateDownloadsInternal(
         audio: groupOutputFromOutcome(separateOutcomeByKind(event.result, 'audio')),
       },
     };
-    await chrome.storage.session.set({ [pendingSeparateExportGroupKey(job.id)]: group });
+    await budgetedSessionStorage.set({ [pendingSeparateExportGroupKey(job.id)]: group });
     const pageUrl = mergeOwnerPageUrl(job);
     const policy = await publicationSavePolicy(pageUrl, job.savePathPolicy);
     const customPending: PendingCustomExport | undefined =
@@ -3906,7 +3908,7 @@ async function startVerifiedSeparateDownloadsInternal(
           state: 'starting',
           recordId: record.id,
         };
-        await chrome.storage.session.set({ [pendingSeparateExportGroupKey(job.id)]: group });
+        await budgetedSessionStorage.set({ [pendingSeparateExportGroupKey(job.id)]: group });
         continue;
       }
       try {
@@ -3929,7 +3931,7 @@ async function startVerifiedSeparateDownloadsInternal(
           downloadId: chromeDownloadId,
         };
         await Promise.all([
-          chrome.storage.session.set({
+          budgetedSessionStorage.set({
             [pendingSeparateExportGroupKey(job.id)]: group,
             [pendingSeparateExportKey(chromeDownloadId)]: pending,
           }),
@@ -3962,11 +3964,11 @@ async function startVerifiedSeparateDownloadsInternal(
           updatedAt: Date.now(),
         });
       }
-      await chrome.storage.session.set({ [pendingSeparateExportGroupKey(job.id)]: group });
+      await budgetedSessionStorage.set({ [pendingSeparateExportGroupKey(job.id)]: group });
     }
 
     if (customPending && Object.keys(customPending.outputs).length > 0) {
-      await chrome.storage.session.set({ [pendingCustomExportKey(job.id)]: customPending });
+      await budgetedSessionStorage.set({ [pendingCustomExportKey(job.id)]: customPending });
       try {
         await sendMergeOffscreenCommand({
           channel: 'foxfetch-merge-offscreen-v1',
@@ -3994,7 +3996,7 @@ async function startVerifiedSeparateDownloadsInternal(
             updatedAt: Date.now(),
           });
         }
-        await chrome.storage.session.remove(pendingCustomExportKey(job.id));
+        await budgetedSessionStorage.remove(pendingCustomExportKey(job.id));
       }
     }
 
@@ -4024,10 +4026,10 @@ async function handleCustomDirectorySaved(
   event: Extract<MergeOffscreenEvent, { type: 'CUSTOM_SAVED' }>,
 ): Promise<void> {
   const storageKey = pendingCustomExportKey(event.jobId);
-  const value = (await chrome.storage.session.get(storageKey))[storageKey];
+  const value = (await budgetedSessionStorage.get(storageKey))[storageKey];
   if (!isPendingCustomExport(value)) return;
   const pending = value;
-  await chrome.storage.session.remove(storageKey);
+  await budgetedSessionStorage.remove(storageKey);
 
   if (pending.mode === 'merge') {
     const output = pending.outputs.merge;
@@ -4086,7 +4088,7 @@ async function handleCustomDirectorySaved(
   }
 
   const groupKey = pendingSeparateExportGroupKey(event.jobId);
-  const groupValue = (await chrome.storage.session.get(groupKey))[groupKey];
+  const groupValue = (await budgetedSessionStorage.get(groupKey))[groupKey];
   if (!isPendingSeparateExportGroup(groupValue)) {
     await sendMergeOffscreenCommand({
       channel: 'foxfetch-merge-offscreen-v1',
@@ -4132,7 +4134,7 @@ async function handleCustomDirectorySaved(
       updatedAt: Date.now(),
     });
   }
-  await chrome.storage.session.set({ [groupKey]: group });
+  await budgetedSessionStorage.set({ [groupKey]: group });
   await settlePendingSeparateGroup(group);
 }
 
@@ -4221,7 +4223,7 @@ async function withMergeStopDeadline<T>(task: Promise<T>, timeoutMs = 20_000): P
 
 /** Stop only this job's browser publications; complete files are never removed. */
 async function stopPublishedBrowserDownloads(jobId: string): Promise<void> {
-  const stored = await chrome.storage.session.get(null);
+  const stored = await budgetedSessionStorage.get(null);
   for (const [key, value] of Object.entries(stored)) {
     const merged =
       key.startsWith(MERGE_EXPORT_STORAGE_PREFIX) &&
@@ -4272,7 +4274,7 @@ async function clearCancelledPublicationMetadata(jobId: string): Promise<void> {
   if ((await mergeJobStore.get(jobId))?.state === 'completed') return;
   const customKey = pendingCustomExportKey(jobId);
   const groupKey = pendingSeparateExportGroupKey(jobId);
-  const stored = await chrome.storage.session.get([customKey, groupKey]);
+  const stored = await budgetedSessionStorage.get([customKey, groupKey]);
   const custom = stored[customKey];
   const group = stored[groupKey];
   const records = await getDownloadHistory();
@@ -4298,7 +4300,7 @@ async function clearCancelledPublicationMetadata(jobId: string): Promise<void> {
       updatedAt: Date.now(),
     });
   }
-  await chrome.storage.session.remove([customKey, groupKey]);
+  await budgetedSessionStorage.remove([customKey, groupKey]);
 }
 
 async function cancelMergeDockJobInternal(initial: MergeJob): Promise<MergeDockView> {
@@ -5016,11 +5018,11 @@ function isPendingSeparateExportGroup(value: unknown): value is PendingSeparateE
 
 async function recoverPendingCustomExports(): Promise<Set<string>> {
   const activeJobIds = new Set<string>();
-  const stored = await chrome.storage.session.get(null);
+  const stored = await budgetedSessionStorage.get(null);
   for (const [storageKey, value] of Object.entries(stored)) {
     if (!storageKey.startsWith(CUSTOM_EXPORT_STORAGE_PREFIX)) continue;
     if (!isPendingCustomExport(value) || storageKey !== pendingCustomExportKey(value.jobId)) {
-      await chrome.storage.session.remove(storageKey);
+      await budgetedSessionStorage.remove(storageKey);
       continue;
     }
     const owner = await mergeJobStore.get(value.jobId);
@@ -5053,7 +5055,7 @@ async function recoverPendingCustomExports(): Promise<Set<string>> {
       }
     }
 
-    await chrome.storage.session.remove([storageKey, pendingSeparateExportGroupKey(value.jobId)]);
+    await budgetedSessionStorage.remove([storageKey, pendingSeparateExportGroupKey(value.jobId)]);
     for (const output of Object.values(value.outputs)) {
       await upsertDownloadRecord({
         ...output.record,
@@ -5081,14 +5083,14 @@ async function recoverPendingCustomExports(): Promise<Set<string>> {
 
 async function recoverPendingMergeExports(): Promise<Set<string>> {
   const activeJobIds = new Set<string>();
-  const stored = await chrome.storage.session.get(null);
+  const stored = await budgetedSessionStorage.get(null);
   for (const [storageKey, value] of Object.entries(stored)) {
     if (!storageKey.startsWith(MERGE_EXPORT_STORAGE_PREFIX) || !isPendingMergeExport(value)) {
       continue;
     }
     const downloadId = Number(storageKey.slice(MERGE_EXPORT_STORAGE_PREFIX.length));
     if (!Number.isInteger(downloadId)) {
-      await chrome.storage.session.remove(storageKey);
+      await budgetedSessionStorage.remove(storageKey);
       continue;
     }
     const item = (await chrome.downloads.search({ id: downloadId }).catch(() => []))[0];
@@ -5105,13 +5107,13 @@ async function recoverPendingMergeExports(): Promise<Set<string>> {
 
 async function recoverPendingSeparateExports(): Promise<Set<string>> {
   const activeJobIds = new Set<string>();
-  const stored = await chrome.storage.session.get(null);
+  const stored = await budgetedSessionStorage.get(null);
   const validGroupIds = new Set<string>();
 
   for (const [storageKey, value] of Object.entries(stored)) {
     if (!storageKey.startsWith(SEPARATE_EXPORT_GROUP_STORAGE_PREFIX)) continue;
     if (!isPendingSeparateExportGroup(value)) {
-      await chrome.storage.session.remove(storageKey);
+      await budgetedSessionStorage.remove(storageKey);
       continue;
     }
     const group = value;
@@ -5145,13 +5147,13 @@ async function recoverPendingSeparateExports(): Promise<Set<string>> {
           ? { error: item?.error ? `浏览器保存失败：${item.error}` : '下载任务已不存在' }
           : {}),
       };
-      await chrome.storage.session.remove(pendingSeparateExportKey(output.downloadId));
+      await budgetedSessionStorage.remove(pendingSeparateExportKey(output.downloadId));
       await updateDownloadByChromeId(output.downloadId, {
         state: terminalState,
         ...(item?.error ? { error: item.error } : {}),
       }).catch(() => undefined);
     }
-    await chrome.storage.session.set({ [storageKey]: group });
+    await budgetedSessionStorage.set({ [storageKey]: group });
     if (active) activeJobIds.add(group.jobId);
     else await settlePendingSeparateGroup(group);
   }
@@ -5159,7 +5161,7 @@ async function recoverPendingSeparateExports(): Promise<Set<string>> {
   for (const [storageKey, value] of Object.entries(stored)) {
     if (!storageKey.startsWith(SEPARATE_EXPORT_STORAGE_PREFIX)) continue;
     if (!isPendingSeparateExport(value) || !validGroupIds.has(value.jobId)) {
-      await chrome.storage.session.remove(storageKey);
+      await budgetedSessionStorage.remove(storageKey);
     }
   }
   return activeJobIds;
@@ -6149,9 +6151,9 @@ async function assertYouTubeTaskPage(owner: YouTubeTaskOwner): Promise<void> {
 // Independent YouTube task channel. Existing Bilibili actions and eager reads are untouched.
 const youtubeSelectionPreferences = new YouTubeSelectionPreferences({
   read: async () =>
-    (await chrome.storage.session.get('youtubeSelectionDraftsV1')).youtubeSelectionDraftsV1,
+    (await budgetedSessionStorage.get('youtubeSelectionDraftsV1')).youtubeSelectionDraftsV1,
   write: async (value) => {
-    await chrome.storage.session.set({ youtubeSelectionDraftsV1: value });
+    await budgetedSessionStorage.set({ youtubeSelectionDraftsV1: value });
   },
 });
 const youtubeTaskJournal = new YouTubeTaskJournal({
@@ -6292,9 +6294,9 @@ async function ensureYouTubeTasksRestored(): Promise<void> {
 
 const youtubePermissionContinuation = new YouTubePermissionContinuation({
   storage: {
-    get: (keys) => chrome.storage.session.get(keys ?? null),
-    set: (items) => chrome.storage.session.set(items),
-    remove: (keys) => chrome.storage.session.remove(keys),
+    get: (keys) => budgetedSessionStorage.get(keys ?? null),
+    set: (items) => budgetedSessionStorage.set(items),
+    remove: (keys) => budgetedSessionStorage.remove(keys),
   },
   assertCurrent: assertYouTubeTaskPage,
   hasAccess: () => chrome.permissions.contains(YOUTUBE_SOURCE_PERMISSIONS),
@@ -7339,6 +7341,15 @@ async function handleUiRequest(
   )
     throw new Error('设置会话已失效，请重新打开设置。');
   switch (message.type) {
+    case 'GET_INLINE_IMAGE_PREVIEW': {
+      if (sender?.id !== chrome.runtime.id || sender.tab || !sender.url?.startsWith(chrome.runtime.getURL(''))) {
+        throw new Error('预览请求来源无效。');
+      }
+      const state = await getTabState(message.tabId);
+      const asset = state?.assets.find((item) => item.id === message.assetId && item.inlineImage?.token === message.token);
+      if (!state || !asset) throw new Error('图片引用已失效。');
+      return success(await loadInlineImage(message.tabId, state.pageUrl, asset, true));
+    }
     case 'VERIFY_SETTINGS_FRAME':
       return success(!!sender && (await verifySettingsFrame(sender)));
     case 'RELEASE_SETTINGS_FRAME':
@@ -8092,6 +8103,15 @@ function isAgentEvent(message: unknown): boolean {
 }
 
 export default defineBackground(() => {
+  void (async () => {
+    const keys = Object.keys(await budgetedSessionStorage.get(null));
+    for (const key of keys) {
+      const match = /^foxfetch:tab:(\d+)$/.exec(key);
+      if (!match) continue;
+      const tabId = Number(match[1]);
+      await serializeTabStateMutation(tabId, () => migrateTabInlineImages(tabId));
+    }
+  })().catch(() => console.warn('FoxFetch: inline-image state migration deferred.'));
   chrome.runtime.onInstalled.addListener(() => {
     void getSettings().catch(() =>
       chrome.storage.sync.set({ 'foxfetch:settings': DEFAULT_SETTINGS }),
@@ -8413,7 +8433,7 @@ export default defineBackground(() => {
     retiredTabDocuments.delete(tabId);
     clearResourceCenterPendingTimer(tabId);
     resourceCenterPorts.delete(tabId);
-    void chrome.storage.session.remove(cacheRestartKey(tabId));
+    void budgetedSessionStorage.remove(cacheRestartKey(tabId));
     void removeCaptureSessionsForTab(tabId).catch(() => undefined);
     void clearMseDownloadFallbacksForTab(tabId).catch(() => undefined);
     void serializeTabStateMutation(tabId, () => clearTabState(tabId));
@@ -8544,3 +8564,5 @@ export default defineBackground(() => {
     }
   });
 });
+import { loadInlineImage } from '../modules/downloads/inline-image-source';
+import { migrateTabInlineImages } from '../modules/storage/tab-state';

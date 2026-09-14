@@ -100,6 +100,8 @@ export interface BilibiliMediaRepresentation {
 }
 
 export interface MediaAsset {
+  /** Page-local capability; url is empty, not a fabricated network URL. */
+  inlineImage?: { token: string; pageUrl: string; tabId?: number };
   /** Detector-only unresolved player source; never shown as a normal download. */
   presentationRole?: 'unresolved-video';
   id: string;
@@ -627,6 +629,7 @@ export type PlaybackCommand =
   | { action: 'toggleController' };
 
 export type UiRequest =
+  | { type: 'GET_INLINE_IMAGE_PREVIEW'; tabId: number; assetId: string; token: string }
   | {
       type: 'OPEN_VIDEO_VIEW';
       tabId: number;
@@ -776,6 +779,7 @@ export interface MediaArtworkIdentityBinding {
 }
 
 export type AgentRequest =
+  | { type: 'AGENT_READ_INLINE_IMAGE'; token: string; pageUrl: string; preview: boolean }
   | { type: 'AGENT_SCAN' }
   | { type: 'AGENT_NAVIGATION'; pageUrl: string }
   | {

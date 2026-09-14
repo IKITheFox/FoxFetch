@@ -39,6 +39,19 @@ const asset: MediaAsset = {
 
 const originalChrome = globalThis.chrome;
 
+it('downloads an inline original on demand without persisting its body in history', async () => {
+  const download = installDownloadApiMock();
+  const original = 'data:image/png;base64,' + 'A'.repeat(100000);
+  const image: MediaAsset = { ...asset, kind: 'image', extension: 'png', url: '', inlineImage: { token: 'page-token', pageUrl: asset.pageUrl } };
+  const resolve = vi.fn(async (item: MediaAsset) => ({ ...item, url: original }));
+  const result = await startBatchDownloads([image], 'Title', DEFAULT_SETTINGS, undefined, resolve);
+  expect(resolve).toHaveBeenCalledTimes(1);
+  expect(download).toHaveBeenCalledWith(expect.objectContaining({ url: original }));
+  expect(result[0]?.url).toBe('');
+  expect(JSON.stringify(await getDownloadHistory())).not.toContain(original);
+  expect(image.url).toBe('');
+});
+
 it('persists exact download ownership before Chrome starts and through reconciliation', async () => {
   const download = installDownloadApiMock();
   const owner = { tabId: 4, pageIdentity: 'https://example.com/watch', mediaEpoch: 7 };

@@ -25,6 +25,8 @@ interface MediaCandidate {
 }
 
 export interface ScanDocumentOptions {
+  /** Agent-internal on-demand read only; never publish these bodies as a snapshot. */
+  inlineImageBodies?: boolean;
   frameId?: number;
   now?: () => number;
   performanceEntries?: readonly PerformanceEntry[];
@@ -448,7 +450,8 @@ export function scanDocument(
     assets.set(asset.id, previous ? mergeMediaAssets(previous, asset) : asset);
     if (assets.size >= MAX_ASSETS_PER_TAB) break;
   }
-  return [...assets.values()].sort((left, right) => right.discoveredAt - left.discoveredAt);
+  return [...assets.values()].sort((left, right) => right.discoveredAt - left.discoveredAt)
+    .map((asset) => options.inlineImageBodies ? asset : referenceInlineImage(asset, doc));
 }
 
 export const scanMedia = scanDocument;
@@ -774,7 +777,8 @@ export class MediaDetector {
       const candidates: MediaCandidate[] = [];
       addPerformanceCandidates([entry], candidates, this.performanceSince);
       for (const candidate of candidates) {
-        const asset = candidateToAsset(candidate, this.doc, this.options.frameId ?? 0, now);
+        const raw = candidateToAsset(candidate, this.doc, this.options.frameId ?? 0, now);
+        const asset = raw ? referenceInlineImage(raw, this.doc) : undefined;
         if (!asset) continue;
         const previous = this.performanceAssets.get(asset.id);
         this.performanceAssets.set(asset.id, {
@@ -1006,3 +1010,4 @@ export class MediaDetector {
     this.replaceStateWrapper = undefined;
   }
 }
+import { referenceInlineImage } from './inline-images';

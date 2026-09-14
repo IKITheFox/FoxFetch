@@ -83,7 +83,10 @@ describe('FoxFetch 26 V2 runtime brand assets', () => {
     expect(APP_NAME).toBe('FoxFetch');
     expect(APP_NAME_EN).toBe(APP_NAME);
     expect(zhLocale.extensionName.message).toBe(APP_NAME);
-    expect(packageMetadata).toMatchObject({ version: '1.0.0' });
+    expect(packageMetadata.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(readFileSync(resolve(projectRoot, 'wxt.config.ts'), 'utf8')).toContain(
+      `version_name: '${packageMetadata.version} Beta'`,
+    );
     expect(packageMetadata.description).toMatch(/^FoxFetch\b/);
     expect(brand).toContain('aria-label="FoxFetch"');
     expect(brand).toContain('class="brand__fox"');

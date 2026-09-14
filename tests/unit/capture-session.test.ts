@@ -28,6 +28,31 @@ function observation(
 }
 
 describe('BlobCaptureSessionRegistry', () => {
+  it('bounds long observations by bytes without truncating URLs or credentials', () => {
+    const registry = new BlobCaptureSessionRegistry({ maxObservationBytesPerSession: 2000 }, () => 1000);
+    registry.create({ id: 'bounded', tabId: 7, frameId: 2, blobAssetId: 'blob', documentId: 'doc' });
+    registry.transition('bounded', 'capturing');
+    const first = observation('first', 'doc', 1000, { url: `https://cdn.example/${'a'.repeat(500)}`, requestHeaders: { authorization: 'keep-exact' } });
+    const second = { ...first, id: 'second' };
+    expect(registry.recordObservation('bounded', first).accepted).toBe(true);
+    const result = registry.recordObservation('bounded', second);
+    expect(result).toMatchObject({ accepted: true, evictedObservationIds: ['first'] });
+    expect(registry.get('bounded')?.observations).toEqual([second]);
+    expect(registry.recordObservation('bounded', { ...second, id: 'huge', url: `https://cdn.example/${'x'.repeat(2000)}` }).accepted).toBe(false);
+    expect(registry.get('bounded')?.observations).toEqual([second]);
+  });
+
+  it('migrates count-only observation snapshots under the byte budget', () => {
+    const old = new BlobCaptureSessionRegistry({}, () => 1000);
+    old.create({ id: 'legacy', tabId: 7, frameId: 2, blobAssetId: 'blob', documentId: 'doc' });
+    old.transition('legacy', 'capturing');
+    for (const id of ['first', 'second']) old.recordObservation('legacy', observation(id, 'doc', 1000, { url: `https://cdn.example/${'a'.repeat(500)}` }));
+    const fresh = new BlobCaptureSessionRegistry({ maxObservationBytesPerSession: 2000 }, () => 1000);
+    const restored = fresh.restore(old.get('legacy')!);
+    expect(restored.observations.map((entry) => entry.id)).toEqual(['second']);
+    expect(restored.droppedObservationCount).toBe(1);
+    expect(restored.binding).toEqual(old.get('legacy')!.binding);
+  });
   it('models the permission, reload, capture, analysis and resolution path', () => {
     let now = 1_000;
     const registry = new BlobCaptureSessionRegistry({}, () => now);

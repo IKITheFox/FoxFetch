@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../storage/session-budget';
 import type { StorageAreaLike } from './store';
 
 export const MERGE_DIRECTORY_PICKER_SESSION_PREFIX = 'foxfetch:merge-directory-picker-session:';
@@ -94,7 +95,7 @@ export class MergeDirectoryPickerSessionBroker {
   private readonly writes = new Map<string, Set<Promise<void>>>();
 
   constructor(
-    private readonly storage: StorageAreaLike = chrome.storage.session,
+    private readonly storage: StorageAreaLike = budgetedSessionStorage,
     private readonly now: () => number = Date.now,
     private readonly createId: () => string = () => crypto.randomUUID(),
   ) {}

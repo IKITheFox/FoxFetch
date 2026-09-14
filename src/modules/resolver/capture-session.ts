@@ -1,3 +1,5 @@
+import { estimateSessionBytes } from '../storage/session-budget';
+
 export const BLOB_CAPTURE_SESSION_STATES = [
   'permission_required',
   'reload_required',
@@ -84,6 +86,7 @@ export interface BlobCaptureSession {
 export interface BlobCaptureSessionLimits {
   maxSessions: number;
   maxObservationsPerSession: number;
+  maxObservationBytesPerSession: number;
   maxCandidateOrigins: number;
   maxResolvedAssetIds: number;
   maxRetiredDocumentIds: number;
@@ -95,6 +98,7 @@ export interface BlobCaptureSessionLimits {
 export const DEFAULT_BLOB_CAPTURE_SESSION_LIMITS: Readonly<BlobCaptureSessionLimits> = {
   maxSessions: 8,
   maxObservationsPerSession: 256,
+  maxObservationBytesPerSession: 512 * 1024,
   maxCandidateOrigins: 32,
   maxResolvedAssetIds: 64,
   maxRetiredDocumentIds: 8,
@@ -248,6 +252,7 @@ function normalizeLimits(input: Partial<BlobCaptureSessionLimits> = {}): BlobCap
   const limits = { ...DEFAULT_BLOB_CAPTURE_SESSION_LIMITS, ...input };
   assertPositiveInteger('maxSessions', limits.maxSessions);
   assertPositiveInteger('maxObservationsPerSession', limits.maxObservationsPerSession);
+  assertPositiveInteger('maxObservationBytesPerSession', limits.maxObservationBytesPerSession);
   assertPositiveInteger('maxCandidateOrigins', limits.maxCandidateOrigins);
   assertPositiveInteger('maxResolvedAssetIds', limits.maxResolvedAssetIds);
   assertPositiveInteger('maxRetiredDocumentIds', limits.maxRetiredDocumentIds);
@@ -660,6 +665,12 @@ export class BlobCaptureSessionRegistry {
   restore(session: BlobCaptureSession): BlobCaptureSession {
     validateSessionSnapshot(session, this.limits);
     const restored = cloneSession(session);
+    // Migrate older count-only snapshots using the same FIFO policy as new observations.
+    while (restored.observations.length &&
+      estimateSessionBytes(restored.observations) > this.limits.maxObservationBytesPerSession) {
+      restored.observations.shift();
+      restored.droppedObservationCount++;
+    }
     if (!this.sessions.has(restored.id)) this.makeRoomForSession();
     this.sessions.set(restored.id, restored);
     return cloneSession(restored);
@@ -855,8 +866,16 @@ export class BlobCaptureSessionRegistry {
     }
 
     const observation = cloneObservation(observationInput);
+    if (estimateSessionBytes([observation]) > this.limits.maxObservationBytesPerSession) {
+      return { accepted: false, reason: 'invalid_observation', session: cloneSession(session) };
+    }
     const allObservations = [...session.observations, observation];
-    const overflow = Math.max(0, allObservations.length - this.limits.maxObservationsPerSession);
+    let overflow = Math.max(0, allObservations.length - this.limits.maxObservationsPerSession);
+    let bytes = estimateSessionBytes(allObservations.slice(overflow));
+    while (bytes > this.limits.maxObservationBytesPerSession && overflow < allObservations.length) {
+      bytes -= estimateSessionBytes(allObservations[overflow]) + 2;
+      overflow++;
+    }
     const evicted = allObservations.slice(0, overflow);
     const observations = allObservations.slice(overflow);
     const observationOrigin = normalizeBlobCaptureOrigin(observation.origin ?? observation.url);

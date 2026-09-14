@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../storage/session-budget';
 import type {
   MediaRequestHeaders,
   MergeJobSeed,
@@ -417,7 +418,7 @@ export class ChromeMergeJobStore implements MergeJobStore {
 
   constructor(
     private readonly storage: StorageAreaLike = chrome.storage.local,
-    private readonly contextStorage: StorageAreaLike = chrome.storage.session,
+    private readonly contextStorage: StorageAreaLike = budgetedSessionStorage,
     private readonly now: () => number = Date.now,
   ) {}
 
@@ -551,7 +552,7 @@ export class ChromeMergeJobStore implements MergeJobStore {
 export async function saveMergeJobSeed(
   seed: MergeJobSeed,
   storage: StorageAreaLike = chrome.storage.local,
-  contextStorage: StorageAreaLike = chrome.storage.session,
+  contextStorage: StorageAreaLike = budgetedSessionStorage,
 ): Promise<MergeJob> {
   const job = mergeJobFromSeed(seed);
   const store = new ChromeMergeJobStore(storage, contextStorage);

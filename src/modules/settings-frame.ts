@@ -13,7 +13,10 @@ export async function mountSettingsFrame(
   const root = container.attachShadow({ mode: 'closed' });
   const frame = document.createElement('iframe');
   frame.title = uiText('E0399');
-  frame.style.cssText = 'display:block;border:0;width:100%;height:100%;color-scheme:normal';
+  container.style.overflow = 'clip';
+  container.style.overflowAnchor = 'none';
+  frame.style.cssText =
+    'display:block;border:0;width:100%;height:100%;min-height:0;color-scheme:normal';
   const url = new URL(chrome.runtime.getURL('settings-float.html'));
   url.searchParams.set('token', options.token);
   if (options.section) url.hash = options.section;
@@ -49,6 +52,12 @@ export async function mountSettingsFrame(
       );
   };
   window.addEventListener('message', listener);
+  const escape = (event: KeyboardEvent) => {
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+    event.preventDefault();
+    frame.contentWindow?.postMessage({ type: 'FOXF_SETTINGS_CLOSE' }, new URL(url).origin);
+  };
+  window.addEventListener('keydown', escape);
   root.append(frame);
   return {
     ready,
@@ -59,6 +68,7 @@ export async function mountSettingsFrame(
     dispose: () => {
       clearTimeout(timer);
       window.removeEventListener('message', listener);
+      window.removeEventListener('keydown', escape);
       container.remove();
     },
   };
@@ -82,13 +92,23 @@ export function openLocalSettings(section?: 'permissions', fallback = false): Pr
     document.body.append(container);
     const previousFocus = document.activeElement as HTMLElement | null;
     const clamp = (dx = 0, dy = 0) => {
+      const viewport = window.visualViewport;
+      const width = viewport?.width ?? innerWidth;
+      const height = viewport?.height ?? innerHeight;
+      const left = viewport?.offsetLeft ?? 0;
+      const top = viewport?.offsetTop ?? 0;
+      container.style.boxSizing = 'border-box';
+      container.style.width = `${Math.min(410, Math.max(1, width - 20))}px`;
+      container.style.height = `${Math.max(1, Math.min(height * 0.85, height - 20))}px`;
       const rect = container.getBoundingClientRect();
-      container.style.left = `${Math.max(0, Math.min(innerWidth - rect.width, rect.left + dx))}px`;
-      container.style.top = `${Math.max(0, Math.min(innerHeight - rect.height, rect.top + dy))}px`;
+      container.style.left = `${Math.max(left, Math.min(left + width - rect.width, rect.left + dx))}px`;
+      container.style.top = `${Math.max(top, Math.min(top + height - rect.height, rect.top + dy))}px`;
     };
     const resize = () => clamp();
     const close = () => {
       window.removeEventListener('resize', resize);
+      window.visualViewport?.removeEventListener('resize', resize);
+      window.visualViewport?.removeEventListener('scroll', resize);
       overlay?.dispose();
       overlay = undefined;
       previousFocus?.focus();
@@ -101,6 +121,9 @@ export function openLocalSettings(section?: 'permissions', fallback = false): Pr
       onDrag: clamp,
     });
     window.addEventListener('resize', resize);
+    window.visualViewport?.addEventListener('resize', resize);
+    window.visualViewport?.addEventListener('scroll', resize);
+    clamp();
     try {
       await overlay.ready;
     } catch (error) {

@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../storage/session-budget';
 import type { MergeDockPhase, MergeDockView } from '../../shared/types';
 import { normalizeMediaTitle } from '../../shared/media-title';
 import { MERGE_DOWNLOAD_PROGRESS_END, MERGE_MUX_PROGRESS_END } from './progress';
@@ -91,7 +92,7 @@ export class MergeDockGrantBroker {
   private readonly permissionClaims = new Set<string>();
 
   constructor(
-    private readonly storage: StorageAreaLike = chrome.storage.session,
+    private readonly storage: StorageAreaLike = budgetedSessionStorage,
     private readonly now: () => number = Date.now,
     private readonly createToken: () => string = () => crypto.randomUUID(),
   ) {}

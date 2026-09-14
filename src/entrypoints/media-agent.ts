@@ -89,6 +89,7 @@ function isAgentRequest(message: unknown): message is AgentRequest {
   if (message == null || typeof message !== 'object' || !('type' in message)) return false;
   const type = (message as { type?: unknown }).type;
   return (
+    type === 'AGENT_READ_INLINE_IMAGE' ||
     type === 'AGENT_SCAN' ||
     type === 'AGENT_NAVIGATION' ||
     type === 'AGENT_PLAYBACK_COMMAND' ||
@@ -321,7 +322,7 @@ class MediaAgentRuntime implements ExposedMediaAgent {
   ): boolean | undefined => {
     if (!isAgentRequest(message)) return undefined;
     if (
-      (message.type === 'AGENT_BIND_ARTWORK_IDENTITY' || message.type === 'AGENT_OPEN_SETTINGS') &&
+      (message.type === 'AGENT_READ_INLINE_IMAGE' || message.type === 'AGENT_BIND_ARTWORK_IDENTITY' || message.type === 'AGENT_OPEN_SETTINGS') &&
       (sender.id !== chrome.runtime.id ||
         sender.tab != null ||
         (sender.url != null && sender.url !== chrome.runtime.getURL('background.js')))
@@ -335,8 +336,11 @@ class MediaAgentRuntime implements ExposedMediaAgent {
 
   private async handleRequest(
     request: AgentRequest,
-  ): Promise<AgentSnapshot | PlaybackCommandResult> {
+  ): Promise<AgentSnapshot | PlaybackCommandResult | string> {
     switch (request.type) {
+      case 'AGENT_READ_INLINE_IMAGE':
+        return readInlineImage(this.doc, request.token, request.pageUrl, request.preview,
+          () => scanDocument(this.doc, { inlineImageBodies: true }));
       case 'AGENT_SCAN':
         this.detector.scanNow();
         this.playback.refresh();
@@ -1040,3 +1044,5 @@ export default defineUnlistedScript({
     return agent.start();
   },
 });
+import { readInlineImage } from '../modules/detector/inline-images';
+import { scanDocument } from '../modules/detector/media-detector';

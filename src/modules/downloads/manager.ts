@@ -91,7 +91,12 @@ export async function startAssetDownload(
   index: number,
   settings: AppSettings,
   owner?: DownloadActivityOwner,
+  resolveAsset?: (asset: MediaAsset) => Promise<MediaAsset>,
 ): Promise<DownloadRecord> {
+  if (asset.inlineImage) {
+    if (!resolveAsset) throw new Error('图片需要从原页面读取，请重新扫描后下载。');
+    asset = await resolveAsset(asset);
+  }
   const validationError = directDownloadValidationError(asset);
   if (validationError) throw new Error(validationError);
 
@@ -100,7 +105,7 @@ export async function startAssetDownload(
     id: crypto.randomUUID(),
     assetId: asset.id,
     filename: buildDownloadFilename(asset, pageTitle, index),
-    url: asset.url,
+    url: asset.kind === 'image' && asset.url.startsWith('data:') ? '' : asset.url,
     kind: asset.kind,
     state: 'queued',
     createdAt: now,
@@ -187,6 +192,7 @@ export async function startBatchDownloads(
   pageTitle: string,
   settings: AppSettings,
   owner?: DownloadActivityOwner,
+  resolveAsset?: (asset: MediaAsset) => Promise<MediaAsset>,
 ): Promise<DownloadRecord[]> {
   const results: DownloadRecord[] = [];
   const limit = Math.max(1, Math.min(8, settings.download.concurrentDownloads));
@@ -198,7 +204,7 @@ export async function startBatchDownloads(
       nextIndex += 1;
       const asset = assets[index];
       if (!asset) continue;
-      results[index] = await startAssetDownload(asset, pageTitle, index, settings, owner);
+      results[index] = await startAssetDownload(asset, pageTitle, index, settings, owner, resolveAsset);
     }
   }
 

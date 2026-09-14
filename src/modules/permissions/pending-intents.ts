@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../storage/session-budget';
 import type {
   MediaAccessIntent,
   MediaAccessIntentAction,
@@ -79,7 +80,7 @@ export class PendingPermissionIntentStore<
   private readonly ttlMs: number;
 
   constructor(
-    private readonly storage: SessionStorageArea = chrome.storage.session,
+    private readonly storage: SessionStorageArea = budgetedSessionStorage,
     private readonly now: () => number = Date.now,
     options: PendingPermissionIntentStoreOptions = {},
   ) {
@@ -260,7 +261,7 @@ export class PendingMediaAccessIntentStore extends PendingPermissionIntentStore<
   MediaAccessIntent,
   MediaAccessIntentResult
 > {
-  constructor(storage: SessionStorageArea = chrome.storage.session, now: () => number = Date.now) {
+  constructor(storage: SessionStorageArea = budgetedSessionStorage, now: () => number = Date.now) {
     super(storage, now, {
       storagePrefix: MEDIA_ACCESS_STORAGE_PREFIX,
       ttlMs: MEDIA_ACCESS_INTENT_TTL_MS,

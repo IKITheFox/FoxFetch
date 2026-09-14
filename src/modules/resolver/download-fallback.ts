@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../storage/session-budget';
 import type { DownloadRecord } from '../../shared/types';
 
 const FALLBACK_CONTEXTS_KEY = 'foxfetch:mse-download-fallbacks';
@@ -41,13 +42,13 @@ function isContext(value: unknown): value is MseDownloadFallbackContext {
 }
 
 async function readContexts(now: number): Promise<MseDownloadFallbackContext[]> {
-  const stored = (await chrome.storage.session.get(FALLBACK_CONTEXTS_KEY))[FALLBACK_CONTEXTS_KEY];
+  const stored = (await budgetedSessionStorage.get(FALLBACK_CONTEXTS_KEY))[FALLBACK_CONTEXTS_KEY];
   if (!Array.isArray(stored)) return [];
   return stored.filter(isContext).filter((context) => context.expiresAt > now);
 }
 
 async function writeContexts(contexts: readonly MseDownloadFallbackContext[]): Promise<void> {
-  await chrome.storage.session.set({
+  await budgetedSessionStorage.set({
     [FALLBACK_CONTEXTS_KEY]: contexts
       .slice()
       .sort((left, right) => right.createdAt - left.createdAt)

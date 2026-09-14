@@ -1,3 +1,4 @@
+import { budgetedSessionStorage } from '../storage/session-budget';
 import type { MediaDockProductDownloadMode } from '../../shared/types';
 import type { MediaProduct } from './media-products';
 
@@ -131,7 +132,7 @@ export class MediaDockProductGrantBroker {
   private readonly permissionClaims = new Set<string>();
 
   constructor(
-    private readonly storage: MediaDockGrantStorage = chrome.storage.session,
+    private readonly storage: MediaDockGrantStorage = budgetedSessionStorage,
     private readonly now: () => number = Date.now,
     private readonly createToken: () => string = () => crypto.randomUUID(),
   ) {}

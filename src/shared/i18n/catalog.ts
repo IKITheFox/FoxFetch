@@ -2488,6 +2488,7 @@ export const messages = {
   E1135: ['查看详情', 'View details'],
   E1136: ['正在识别视频资源', 'Detecting video resources…'],
   E1137: ['视频资源识别失败', 'Video resource detection failed'],
+  E_STORAGE_FULL: ['临时状态存储空间不足', 'Temporary state storage is full'],
   E1138: ['已暂停', 'Paused'],
   E1139: ['播放中', 'Playing'],
   E1140: ['等待网页媒体', 'Waiting for page media'],
