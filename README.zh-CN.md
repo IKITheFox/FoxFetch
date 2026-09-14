@@ -12,11 +12,20 @@
 
 [English](README.md) | 简体中文
 
-[下载 v1.0.0 Beta](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.0-Beta) · [反馈问题](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [更新日志](CHANGELOG.md)
+[下载 v1.0.2 Beta](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.2-Beta) · [反馈问题](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [更新日志](CHANGELOG.md)
 
 FoxFetch 基于 Manifest V3，将媒体资源侧边栏与浮动播放控制器整合在一起，用于识别受支持页面中的视频、音频和图片，并保存你拥有或获准下载的内容。
 
-**当前状态：** v1.0.0 Beta。此版本通过 GitHub 分发，需要手动安装，尚未上架 Chrome 应用商店。
+**当前状态：** v1.0.2 Beta，已在 GitHub 标记为 Latest。此版本通过 GitHub 分发，需要手动安装。版本名称仍保留 Beta；Latest 标记不代表已完成真实网站验收。
+
+## v1.0.2 Beta 更新
+
+- 大型内嵌图片正文不再写入会话资源列表和下载历史，为媒体识别与下载状态保留空间。
+- 使用页面绑定的轻量引用，按需生成缩略图、读取原图下载。原图失效时需要刷新或重新扫描来源页面。
+- 迁移旧内嵌图片记录，增加会话存储容量保护。
+- 包含受限视口下的设置浮窗布局修复。保存或取消后底部仍留白属于已知后续问题，本版尚未修复。
+
+验证情况：1900 项单元测试、4 项隔离浏览器测试、类型检查与生产构建通过。问题设备上真实登录网站的下载及合并输出仍待验收。详细变更和限制见[更新日志](CHANGELOG.md)。
 
 ## 功能
 
@@ -34,7 +43,7 @@ FoxFetch 基于 Manifest V3，将媒体资源侧边栏与浮动播放控制器�
 
 ### 方式一：直接拖入 ZIP
 
-1. 打开 [v1.0.0 Beta 发布页](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.0-Beta)，下载 **`FoxFetch-v1.0.0-Beta-chrome.zip`**。
+1. 打开 [v1.0.2 Beta 发布页](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.2-Beta)，下载 **`FoxFetch-v1.0.2-Beta-chrome.zip`**。发布附件同时提供安装说明和用于完整性校验的 `SHA256SUMS.txt`。
 2. 打开 `chrome://extensions/`，启用**开发者模式**。
 3. 从文件管理器将 ZIP 拖入扩展管理页面。Chrome 会自动解压，无需手动解压。
 4. 等待 FoxFetch 出现在扩展列表中，将其固定到工具栏，然后刷新媒体页面。
@@ -54,7 +63,7 @@ FoxFetch 基于 Manifest V3，将媒体资源侧边栏与浮动播放控制器�
 
 ### 更新
 
-更新前请完成或取消正在运行的下载任务，并记录需要保留的设置。
+更新前请等待下载、捕获和合并任务结束，并记录需要保留的设置。重新加载会中断后台工作，并可能清除会话数据。
 
 - **通过 ZIP 安装：** 下载新版安装 ZIP，开启开发者模式后拖入 `chrome://extensions/`。如果 Chrome 新增了一份扩展，请先停用旧版再使用新版；不要假定设置会在两份扩展之间自动迁移。
 - **通过解压目录安装：** 备份安装目录，用新版解压文件替换目录内容，然后在 Chrome 扩展管理页点击**重新加载**。保持目录路径不变。

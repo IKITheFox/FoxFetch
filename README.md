@@ -12,11 +12,20 @@ Web media discovery, playback controls, and downloads for Chrome, with YouTube a
 
 English | [简体中文](README.zh-CN.md)
 
-[Download v1.0.0 Beta](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.0-Beta) · [Report an issue](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [Changelog](CHANGELOG.md)
+[Download v1.0.2 Beta](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.2-Beta) · [Report an issue](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [Changelog](CHANGELOG.md)
 
 FoxFetch is a Manifest V3 extension that combines a media resource sidebar with a floating playback controller. It detects video, audio, and image resources on supported pages and saves content you own or have permission to download.
 
-**Status:** v1.0.0 Beta. This release is distributed through GitHub and requires manual installation. It is not a Chrome Web Store listing.
+**Status:** v1.0.2 Beta, marked Latest on GitHub. This release is distributed through GitHub and requires manual installation. The Beta version name is retained; Latest does not imply completed real-site acceptance testing.
+
+## What's new in v1.0.2 Beta
+
+- Keep large inline image bodies out of session resource lists and download history, leaving room for media detection and download state.
+- Generate thumbnails and retrieve original inline images on demand through page-bound references. Refresh or rescan the source page if an image is no longer available.
+- Migrate legacy inline image records and add session-storage capacity protection.
+- Include settings floating-window layout fixes for constrained viewports. The blank footer remaining after Save/Cancel is a known follow-up issue, not fixed in this version.
+
+Validation: 1,900 unit tests and four isolated browser tests passed, along with type checking and the production build. Real logged-in downloads and merged-output acceptance on the affected installation remain outstanding. See the [changelog](CHANGELOG.md) for details and limitations.
 
 ## Features
 
@@ -34,7 +43,7 @@ Requires **Chrome 120 or later**. Use an up-to-date Chrome release. Other Chromi
 
 ### Option 1: Drag and drop the ZIP
 
-1. Open the [v1.0.0 Beta release](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.0-Beta) and download **`FoxFetch-v1.0.0-Beta-chrome.zip`**.
+1. Open the [v1.0.2 Beta release](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.2-Beta) and download **`FoxFetch-v1.0.2-Beta-chrome.zip`**. The release also includes installation notes and `SHA256SUMS.txt` for integrity checking.
 2. Open `chrome://extensions/` and enable **Developer mode**.
 3. Drag the ZIP from your file manager onto the extensions page. Chrome extracts the package automatically; no manual extraction is required.
 4. Wait for FoxFetch to appear in the extension list, then pin it to the toolbar and refresh the media page.
@@ -54,7 +63,7 @@ The project-source and third-party-source archives are for developers, not insta
 
 ### Updating
 
-Finish or cancel active downloads before updating. Record any settings you want to retain.
+Finish active downloads, captures, and merges before updating. Record any settings you want to retain. Reloading interrupts background work and may clear session data.
 
 - **ZIP installation:** download the new installation ZIP and drag it onto `chrome://extensions/` with Developer mode enabled. If Chrome adds a separate copy, disable the old copy before using the new one. Do not assume settings will transfer between copies.
 - **Extracted-folder installation:** back up the installed folder, replace its contents with the extracted new package, and select **Reload** on Chrome's extensions page. Keep the folder path unchanged.
