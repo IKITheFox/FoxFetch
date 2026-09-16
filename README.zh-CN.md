@@ -12,11 +12,11 @@
 
 [English](README.md) | 简体中文
 
-[下载 v1.0.2 Beta](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.2-Beta) · [反馈问题](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [更新日志](CHANGELOG.md)
+[从 Chrome 应用商店安装](https://chromewebstore.google.com/detail/mlmnnlljhfaegjijgmmndobijombnkil?utm_source=item-share-cb) · [下载 v1.0.2 Beta ZIP](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.2-Beta) · [反馈问题](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [更新日志](CHANGELOG.md)
 
 FoxFetch 基于 Manifest V3，将媒体资源侧边栏与浮动播放控制器整合在一起，用于识别受支持页面中的视频、音频和图片，并保存你拥有或获准下载的内容。
 
-**当前状态：** v1.0.2 Beta，已在 GitHub 标记为 Latest。此版本通过 GitHub 分发，需要手动安装。版本名称仍保留 Beta；Latest 标记不代表已完成真实网站验收。
+**当前状态：** GitHub 发布版本为 v1.0.2 Beta，已标记为 Latest。可通过 Chrome 应用商店安装，或使用 GitHub ZIP 手动安装；商店可用版本以商店页面为准。版本名称仍保留 Beta；Latest 标记不代表已完成真实网站验收。
 
 ## v1.0.2 Beta 更新
 
@@ -38,6 +38,12 @@ FoxFetch 基于 Manifest V3，将媒体资源侧边栏与浮动播放控制器�
 - **界面设置：** 支持英文与简体中文、浅色／深色／跟随系统主题，以及可拖动的设置浮窗；关闭前提示保存未保存的更改。
 
 ## 安装
+
+### Chrome 应用商店
+
+打开 [FoxFetch 的 Chrome 应用商店页面](https://chromewebstore.google.com/detail/mlmnnlljhfaegjijgmmndobijombnkil?utm_source=item-share-cb)，点击**添加至 Chrome**。商店安装无需开启开发者模式或手动解压。
+
+### 从 GitHub 手动安装
 
 需要 **Chrome 120 或更高版本**，建议及时更新浏览器。其他 Chromium 浏览器可能无法支持 FoxFetch 使用的全部扩展接口。
 

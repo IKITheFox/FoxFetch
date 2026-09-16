@@ -12,11 +12,11 @@ Web media discovery, playback controls, and downloads for Chrome, with YouTube a
 
 English | [简体中文](README.zh-CN.md)
 
-[Download v1.0.2 Beta](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.2-Beta) · [Report an issue](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [Changelog](CHANGELOG.md)
+[Install from Chrome Web Store](https://chromewebstore.google.com/detail/mlmnnlljhfaegjijgmmndobijombnkil?utm_source=item-share-cb) · [Download v1.0.2 Beta ZIP](https://github.com/IKITheFox/FoxFetch/releases/tag/v1.0.2-Beta) · [Report an issue](https://github.com/IKITheFox/FoxFetch/issues/new/choose) · [Changelog](CHANGELOG.md)
 
 FoxFetch is a Manifest V3 extension that combines a media resource sidebar with a floating playback controller. It detects video, audio, and image resources on supported pages and saves content you own or have permission to download.
 
-**Status:** v1.0.2 Beta, marked Latest on GitHub. This release is distributed through GitHub and requires manual installation. The Beta version name is retained; Latest does not imply completed real-site acceptance testing.
+**Status:** The GitHub release is v1.0.2 Beta, marked Latest. Install through the Chrome Web Store or manually using the GitHub ZIP. Check the store listing for its available version. The Beta version name is retained; Latest does not imply completed real-site acceptance testing.
 
 ## What's new in v1.0.2 Beta
 
@@ -38,6 +38,12 @@ Validation: 1,900 unit tests and four isolated browser tests passed, along with 
 - **Interface settings:** English and Simplified Chinese, light/dark/system themes, and draggable settings with an unsaved-changes prompt.
 
 ## Installation
+
+### Chrome Web Store
+
+Open [FoxFetch on the Chrome Web Store](https://chromewebstore.google.com/detail/mlmnnlljhfaegjijgmmndobijombnkil?utm_source=item-share-cb) and choose **Add to Chrome**. Developer mode and manual extraction are not required for store installation.
+
+### Manual installation from GitHub
 
 Requires **Chrome 120 or later**. Use an up-to-date Chrome release. Other Chromium browsers may not support every extension API used by FoxFetch.
 
